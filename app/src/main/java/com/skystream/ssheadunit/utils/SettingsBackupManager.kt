@@ -111,12 +111,9 @@ object SettingsBackupManager {
         "mic-auto-gain-control" to ValueType.BOOLEAN,
         "attach_hw_dsp_equalizer" to ValueType.BOOLEAN,
         "use-native-ssl" to ValueType.BOOLEAN,
-        "auto-start-self-mode" to ValueType.BOOLEAN,
         "auto-start-on-usb" to ValueType.BOOLEAN,
         "auto-start-on-boot" to ValueType.BOOLEAN,
         "auto-start-on-screen-on" to ValueType.BOOLEAN,
-        "auto-start-on-wifi" to ValueType.BOOLEAN,
-        "auto-start-wifi-ssid" to ValueType.STRING,
         "listen-for-usb-devices" to ValueType.BOOLEAN,
         "reopen-on-reconnection" to ValueType.BOOLEAN,
         "auto-connect-priority-order" to ValueType.STRING,
@@ -141,17 +138,6 @@ object SettingsBackupManager {
         "app-theme" to ValueType.INT,
         "enable-rotary" to ValueType.BOOLEAN,
         "kill-on-disconnect" to ValueType.BOOLEAN,
-        "auto-enable-hotspot" to ValueType.BOOLEAN,
-        "wait-for-wifi-before-wifi-direct" to ValueType.BOOLEAN,
-        "wait-for-wifi-timeout" to ValueType.INT,
-        "helper-connection-strategy" to ValueType.INT,
-        "bluetooth-manager-service-name" to ValueType.STRING,
-        // The Native AA handshake opt-in: a reporter who found they need it wants it to survive a
-        // reinstall, which is exactly when they are asked to export their settings.
-        "native-wifi-version-exchange" to ValueType.BOOLEAN,
-        // Selectable from the Android Auto mode block now that the route is wired.
-        "native-ap-transport" to ValueType.INT,
-        "hotspot-interface" to ValueType.STRING,
         "use-libusb" to ValueType.BOOLEAN,
         // Custom loading screen display options. The picked image/video is copied into the app's
         // private storage, so the media path/type cannot be restored on another install and are not
@@ -160,10 +146,6 @@ object SettingsBackupManager {
         "loading-screen-keep-aspect-ratio" to ValueType.BOOLEAN,
         "loading-screen-loop-video" to ValueType.BOOLEAN,
         "loading-screen-scale-percent" to ValueType.INT,
-        // Wireless hotspot host credentials and manual BSSID override.
-        "hotspot-ssid" to ValueType.STRING,
-        "hotspot-password" to ValueType.STRING,
-        "static-bssid" to ValueType.STRING,
         // Touch calibration fix and toast visibility.
         "use_measured_touch_surface" to ValueType.BOOLEAN,
         "show-toast-messages" to ValueType.BOOLEAN
@@ -452,8 +434,6 @@ object SettingsBackupManager {
         Settings.syncAutoStartOnBootToDeviceStorage(context, settings.autoStartOnBoot)
         Settings.syncAutoStartOnScreenOnToDeviceStorage(context, settings.autoStartOnScreenOn)
         Settings.syncAutoStartOnUsbToDeviceStorage(context, settings.autoStartOnUsb)
-        Settings.syncAutoStartOnWifiToDeviceStorage(context, settings.autoStartOnWifi)
-        Settings.syncAutoStartWifiSsidToDeviceStorage(context, settings.autoStartWifiSsid)
         Settings.syncListenForUsbDevicesToDeviceStorage(context, settings.listenForUsbDevices)
         Settings.syncAutoStartBtMacsToDeviceStorage(context, settings.autoStartBluetoothDeviceMacs)
         Settings.setUsbAttachedActivityEnabled(context, settings.listenForUsbDevices)

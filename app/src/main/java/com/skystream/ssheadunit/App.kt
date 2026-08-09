@@ -54,8 +54,6 @@ class App : Application() {
             // can read them during locked boot (before user unlock)
             Settings.syncAutoStartOnBootToDeviceStorage(this, settings.autoStartOnBoot)
             Settings.syncAutoStartOnUsbToDeviceStorage(this, settings.autoStartOnUsb)
-            Settings.syncAutoStartOnWifiToDeviceStorage(this, settings.autoStartOnWifi)
-            Settings.syncAutoStartWifiSsidToDeviceStorage(this, settings.autoStartWifiSsid)
             Settings.syncAutoStartBtMacsToDeviceStorage(this, settings.autoStartBluetoothDeviceMacs)
 
             // Apply app theme (runs the live manager when dynamic, or when a saved place

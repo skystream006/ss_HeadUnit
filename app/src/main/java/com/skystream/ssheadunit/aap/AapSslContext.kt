@@ -234,7 +234,7 @@ class AapSslContext(keyManager: SingleKeyKeyManager): AapSsl {
                 }
                 return ByteArrayWithLimit(resultBuffer, resultBuffer.size)
             } catch (e: Exception) {
-                // Check for Magic Garbage disconnect signal from Wireless Helper
+                // Check for Magic Garbage disconnect signal from the peer.
                 if (length >= 16) {
                     var allFF = true
                     for (i in 0 until 16) {

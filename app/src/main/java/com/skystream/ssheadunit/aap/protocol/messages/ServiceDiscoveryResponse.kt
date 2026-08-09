@@ -3,7 +3,6 @@ package com.skystream.ssheadunit.aap.protocol.messages
 import android.content.Context
 import com.skystream.ssheadunit.App
 import com.skystream.ssheadunit.aap.AapMessage
-import com.skystream.ssheadunit.aap.AapService
 import com.skystream.ssheadunit.aap.KeyCode
 import com.skystream.ssheadunit.aap.protocol.AudioConfigs
 import com.skystream.ssheadunit.aap.protocol.Channel
@@ -156,29 +155,25 @@ class ServiceDiscoveryResponse(private val context: Context)
             services.add(audio2)
 
             if (settings.enableAudioSink) {
-                if (!AapService.selfMode) {
-                    val audio1 = Control.Service.newBuilder().also { service ->
-                        service.id = Channel.ID_AU1
-                        service.mediaSinkService = Control.Service.MediaSinkService.newBuilder().also {
-                            it.availableType = audioType
-                            it.audioType = Media.AudioStreamType.SPEECH
-                            it.addAudioConfigs(AudioConfigs.get(Channel.ID_AU1))
-                        }.build()
+                val audio1 = Control.Service.newBuilder().also { service ->
+                    service.id = Channel.ID_AU1
+                    service.mediaSinkService = Control.Service.MediaSinkService.newBuilder().also {
+                        it.availableType = audioType
+                        it.audioType = Media.AudioStreamType.SPEECH
+                        it.addAudioConfigs(AudioConfigs.get(Channel.ID_AU1))
                     }.build()
-                    services.add(audio1)
-                }
+                }.build()
+                services.add(audio1)
 
-                if (!AapService.selfMode) {
-                    val audio0 = Control.Service.newBuilder().also { service ->
-                        service.id = Channel.ID_AUD
-                        service.mediaSinkService = Control.Service.MediaSinkService.newBuilder().also {
-                            it.availableType = audioType
-                            it.audioType = Media.AudioStreamType.MEDIA
-                            it.addAudioConfigs(AudioConfigs.get(Channel.ID_AUD))
-                        }.build()
+                val audio0 = Control.Service.newBuilder().also { service ->
+                    service.id = Channel.ID_AUD
+                    service.mediaSinkService = Control.Service.MediaSinkService.newBuilder().also {
+                        it.availableType = audioType
+                        it.audioType = Media.AudioStreamType.MEDIA
+                        it.addAudioConfigs(AudioConfigs.get(Channel.ID_AUD))
                     }.build()
-                    services.add(audio0)
-                }
+                }.build()
+                services.add(audio0)
             }
 
             // Microphone Service (Channel 7) - Always required for AA connection (Assistant)

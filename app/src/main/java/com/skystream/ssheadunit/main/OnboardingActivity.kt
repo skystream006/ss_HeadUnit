@@ -144,9 +144,7 @@ class OnboardingActivity : BaseActivity() {
     }
 
     /**
-     * A wizard step that does not apply to the chosen setup and is skipped entirely. The GPS source
-     * choice (this device vs the connected phone) makes no sense in Self Mode, where there is no
-     * separate phone, so it is hidden there.
+     * A wizard step that does not apply to the chosen setup and is skipped entirely.
      */
     private fun isStepHidden(s: Int): Boolean =
         s == STEP_GPS && !settings.showsExternalGps()
@@ -185,7 +183,7 @@ class OnboardingActivity : BaseActivity() {
 
     private fun updateStepperDots() {
         val steps = visibleSteps()
-        // Rebuild if the visible-step count changed (e.g. Self Mode just hid the GPS step).
+        // Rebuild if the visible-step count changed.
         if (stepper.childCount != steps.size) buildStepperDots()
         val density = resources.displayMetrics.density
         val active = resolveAttrColor(com.google.android.material.R.attr.colorPrimary)
@@ -222,28 +220,10 @@ class OnboardingActivity : BaseActivity() {
             }
         }
 
-        // --- Connection: multi-select of USB / WiFi / Self Mode ---
-        val connGroup = findViewById<MaterialButtonToggleGroup>(R.id.onb_conn_group)
-        isBinding = true
-        val modes = settings.connectionModes
-        if (Settings.ConnectionMode.USB in modes) connGroup.check(R.id.onb_conn_usb)
-        if (Settings.ConnectionMode.WIFI in modes) connGroup.check(R.id.onb_conn_wifi)
-        if (Settings.ConnectionMode.SELF in modes) connGroup.check(R.id.onb_conn_self)
-        isBinding = false
+        // --- Connection: USB only ---
+        settings.connectionModes = setOf(Settings.ConnectionMode.USB)
+        findViewById<MaterialButtonToggleGroup>(R.id.onb_conn_group).check(R.id.onb_conn_usb)
         updateConnectionDetail()
-        connGroup.addOnButtonCheckedListener { group, _, _ ->
-            if (isBinding) return@addOnButtonCheckedListener
-            val checked = group.checkedButtonIds
-            val selected = buildSet {
-                if (R.id.onb_conn_usb in checked) add(Settings.ConnectionMode.USB)
-                if (R.id.onb_conn_wifi in checked) add(Settings.ConnectionMode.WIFI)
-                if (R.id.onb_conn_self in checked) add(Settings.ConnectionMode.SELF)
-            }
-            settings.connectionModes = selected
-            updateConnectionDetail()
-            // At least one is required; keep Next in sync while on this step.
-            if (step == STEP_CONNECTION) nextBtn.isEnabled = selected.isNotEmpty()
-        }
 
         // --- Display: detected panel + size/orientation, pre-selected from detection ---
         findViewById<TextView>(R.id.onb_display_detected).text = detectedDisplayText()
@@ -301,14 +281,6 @@ class OnboardingActivity : BaseActivity() {
         findViewById<SwitchMaterial>(R.id.onb_reopen_switch).apply {
             isChecked = settings.reopenOnReconnection
             setOnCheckedChangeListener { _, v -> settings.reopenOnReconnection = v }
-        }
-        // WiFi-only auto-start toggle.
-        findViewById<SwitchMaterial>(R.id.onb_autostart_wifi_switch).apply {
-            isChecked = settings.autoStartOnWifi
-            setOnCheckedChangeListener { _, v ->
-                settings.autoStartOnWifi = v
-                Settings.syncAutoStartOnWifiToDeviceStorage(this@OnboardingActivity, v)
-            }
         }
         // --- Location: this device's GPS vs the connected phone's GPS ---
         val gpsGroup = findViewById<MaterialButtonToggleGroup>(R.id.onb_gps_group)
@@ -440,16 +412,12 @@ class OnboardingActivity : BaseActivity() {
         permissionBinder?.rebind()
     }
 
-    /** Show only the auto-start toggles that match the chosen connection type. Self Mode
-     * connects without USB or WiFi, so both groups are hidden. */
+    /** Show only the USB-related automation toggles. */
     private fun applyAutomationVisibility() {
         val usbVis = if (settings.showsUsb()) View.VISIBLE else View.GONE
         findViewById<View>(R.id.onb_ac_single_row).visibility = usbVis
         findViewById<View>(R.id.onb_as_usb_row).visibility = usbVis
         findViewById<View>(R.id.onb_reopen_row).visibility = usbVis
-        // Auto-start on WiFi is a legacy path that only applies up to Android 12L (API 32).
-        findViewById<View>(R.id.onb_as_wifi_row).visibility =
-            if (settings.showsWifi() && Build.VERSION.SDK_INT <= 32) View.VISIBLE else View.GONE
     }
 
     private fun onNext() {
@@ -547,16 +515,7 @@ class OnboardingActivity : BaseActivity() {
         detail.text = if (settings.connectionModes.isEmpty()) "" else connectionModesLabel()
     }
 
-    /** The chosen connection types as a readable label, e.g. "USB, WiFi". */
-    private fun connectionModesLabel(): String {
-        val modes = settings.connectionModes
-        if (modes.isEmpty()) return getString(R.string.connection_kind_unset)
-        val parts = mutableListOf<String>()
-        if (Settings.ConnectionMode.USB in modes) parts.add(getString(R.string.connection_kind_usb))
-        if (Settings.ConnectionMode.WIFI in modes) parts.add(getString(R.string.connection_kind_wifi))
-        if (Settings.ConnectionMode.SELF in modes) parts.add(getString(R.string.self_mode))
-        return parts.joinToString(", ")
-    }
+    private fun connectionModesLabel(): String = getString(R.string.connection_kind_usb)
 
     // --- Display scan ---
 

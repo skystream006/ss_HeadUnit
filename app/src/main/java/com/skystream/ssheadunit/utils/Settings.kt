@@ -216,11 +216,6 @@ class Settings(private val context: Context) {
             prefs.edit().putInt("pixel-aspect-ratio-e4", value).apply()
         }
 
-    var staticBSSID: String?
-        get() = try { prefs.getString("static-bssid", "0") } catch (e: Exception) { "0" } // Default 0 for Auto
-        set(value) {
-            prefs.edit().putString("static-bssid", value).apply()
-        }
 
     var fakeSpeed: Boolean
         get() = prefs.getBoolean("fake_speed", true)
@@ -354,24 +349,6 @@ class Settings(private val context: Context) {
         get() = prefs.getString("head-unit-model", "Desktop Head Unit")!!
         set(value) { prefs.edit().putString("head-unit-model", value).apply() }
 
-    // 0 = Manual, 1 = Auto (Headunit Server), 2 = Helper (Wifi Launcher), 3 = Native AA
-    var wifiConnectionMode: Int
-        get() {
-            // Migration: Check if old helper boolean exists
-            if (prefs.contains("wifi-launcher-mode")) {
-                val old = prefs.getBoolean("wifi-launcher-mode", false)
-                val newMode = if (old) 2 else 1
-                prefs.edit().putInt("wifi-connection-mode", newMode).remove("wifi-launcher-mode").apply()
-                return newMode
-            }
-            // Migration: Check if native-aa-wireless was true
-            if (prefs.getBoolean("native-aa-wireless", false)) {
-                prefs.edit().putInt("wifi-connection-mode", 3).remove("native-aa-wireless").apply()
-                return 3
-            }
-            return prefs.getInt("wifi-connection-mode", 2) // Default 2 (Wireless Helper)
-        }
-        set(value) { prefs.edit().putInt("wifi-connection-mode", value).apply() }
 
     var videoCodec: String
         get() = prefs.getString("video-codec", "Auto")!!
@@ -409,43 +386,41 @@ class Settings(private val context: Context) {
         get() = prefs.getBoolean("pending-renderer-confirm", false)
         set(value) { prefs.edit().putBoolean("pending-renderer-confirm", value).apply() }
 
-    // How the user primarily connects. Drives which options are surfaced in the Basic tab
-    // (e.g. cable users do not see the Wireless Connection group there). UNSET shows everything.
+    // How the user primarily connects. Retained for existing preferences and defaults to USB.
     var primaryConnection: ConnectionKind
         get() = ConnectionKind.fromInt(prefs.getInt("primary-connection", ConnectionKind.UNSET.value))
         set(value) { prefs.edit().putInt("primary-connection", value.value).apply() }
 
     /**
-     * The connection types the user actually uses (multi-select). Drives which settings are shown.
-     * Empty = nothing chosen yet, so everything is shown. Migrated once from the legacy
-     * single-choice [primaryConnection].
+     * Persist USB as the only supported mode so legacy installs carrying older selections
+     * migrate cleanly.
      */
     var connectionModes: Set<ConnectionMode>
         get() {
             val stored = prefs.getStringSet("connection-modes", null)
-            if (stored != null) return stored.mapNotNull { ConnectionMode.fromKey(it) }.toSet()
-            val migrated = migrateLegacyConnectionModes()
-            connectionModes = migrated
-            return migrated
+            val usbOnly = when {
+                stored != null -> setOf(ConnectionMode.USB)
+                else -> migrateLegacyConnectionModes()
+            }
+            if (stored == null || stored != setOf(ConnectionMode.USB.key)) {
+                connectionModes = usbOnly
+            }
+            return usbOnly
         }
         set(value) {
-            prefs.edit().putStringSet("connection-modes", value.map { it.key }.toSet()).apply()
+            val normalized = if (ConnectionMode.USB in value || value.isEmpty()) {
+                setOf(ConnectionMode.USB.key)
+            } else {
+                emptySet()
+            }
+            prefs.edit().putStringSet("connection-modes", normalized).apply()
         }
 
-    private fun migrateLegacyConnectionModes(): Set<ConnectionMode> = when (primaryConnection) {
-        ConnectionKind.USB_CABLE, ConnectionKind.USB_WIRELESS_ADAPTER -> setOf(ConnectionMode.USB)
-        ConnectionKind.WIFI, ConnectionKind.NATIVE_AA -> setOf(ConnectionMode.WIFI)
-        ConnectionKind.SELF_MODE -> setOf(ConnectionMode.SELF)
-        ConnectionKind.ALL -> setOf(ConnectionMode.USB, ConnectionMode.WIFI)
-        ConnectionKind.UNSET -> emptySet()
-    }
+    private fun migrateLegacyConnectionModes(): Set<ConnectionMode> = setOf(ConnectionMode.USB)
 
-    /** Whether USB-related settings should be shown (empty selection shows everything). */
-    fun showsUsb(): Boolean = connectionModes.isEmpty() || ConnectionMode.USB in connectionModes
-    /** Whether WiFi/wireless settings should be shown (empty selection shows everything). */
-    fun showsWifi(): Boolean = connectionModes.isEmpty() || ConnectionMode.WIFI in connectionModes
-    /** The external-GPS choice only applies when a phone is connected; false only for Self-only. */
-    fun showsExternalGps(): Boolean = showsUsb() || showsWifi()
+    fun showsUsb(): Boolean = true
+    fun showsWifi(): Boolean = false
+    fun showsExternalGps(): Boolean = true
 
     var autoConnectLastSession: Boolean
         get() = prefs.getBoolean("auto-connect-last-session", false)
@@ -528,10 +503,6 @@ class Settings(private val context: Context) {
         get() = prefs.getBoolean("use-native-ssl", false)
         set(value) { prefs.edit().putBoolean("use-native-ssl", value).apply() }
 
-    var autoStartSelfMode: Boolean
-        get() = prefs.getBoolean("auto-start-self-mode", false)
-        set(value) { prefs.edit().putBoolean("auto-start-self-mode", value).apply() }
-
     var autoStartOnUsb: Boolean
         get() = prefs.getBoolean("auto-start-on-usb", false)
         set(value) { prefs.edit().putBoolean("auto-start-on-usb", value).apply() }
@@ -544,13 +515,7 @@ class Settings(private val context: Context) {
         get() = prefs.getBoolean("auto-start-on-screen-on", false)
         set(value) { prefs.edit().putBoolean("auto-start-on-screen-on", value).apply() }
 
-    var autoStartOnWifi: Boolean
-        get() = prefs.getBoolean("auto-start-on-wifi", false)
-        set(value) { prefs.edit().putBoolean("auto-start-on-wifi", value).apply() }
 
-    var autoStartWifiSsid: String
-        get() = prefs.getString("auto-start-wifi-ssid", "")!!
-        set(value) { prefs.edit().putString("auto-start-wifi-ssid", value).apply() }
 
     var listenForUsbDevices: Boolean
         get() = prefs.getBoolean("listen-for-usb-devices", true)
@@ -669,7 +634,6 @@ class Settings(private val context: Context) {
             syncAutoStartOnBootToDeviceStorage(context, false)
             syncAutoStartOnScreenOnToDeviceStorage(context, false)
             syncAutoStartOnUsbToDeviceStorage(context, false)
-            syncAutoStartOnWifiToDeviceStorage(context, false)
             syncListenForUsbDevicesToDeviceStorage(context, true)
             syncAutoStartBtMacToDeviceStorage(context, "")
         }
@@ -706,21 +670,11 @@ class Settings(private val context: Context) {
     enum class ConnectionKind(val value: Int) {
         UNSET(-1),
         USB_CABLE(0),
-        USB_WIRELESS_ADAPTER(1),
-        WIFI(2),
-        NATIVE_AA(3),
-        SELF_MODE(4),
-        ALL(5);
+        ALL(1);
 
-        val isWireless: Boolean
-            get() = this == USB_WIRELESS_ADAPTER || this == WIFI || this == NATIVE_AA
+        fun hidesUsb(): Boolean = false
 
-        /** Whether USB-only settings should be hidden for this connection choice. */
-        fun hidesUsb(): Boolean = this == WIFI || this == NATIVE_AA || this == SELF_MODE
-
-        /** Whether WiFi/Bluetooth settings should be hidden for this connection choice.
-         * (Bluetooth is used to bridge WiFi, so it counts as WiFi scope.) */
-        fun hidesWifi(): Boolean = this == USB_CABLE || this == USB_WIRELESS_ADAPTER || this == SELF_MODE
+        fun hidesWifi(): Boolean = true
 
         companion object {
             private val map = values().associateBy(ConnectionKind::value)
@@ -728,9 +682,9 @@ class Settings(private val context: Context) {
         }
     }
 
-    /** A connection type the user can pick in the multi-select (USB, WiFi or Self Mode). */
+    /** A connection type the user can pick in the multi-select. */
     enum class ConnectionMode(val key: String) {
-        USB("usb"), WIFI("wifi"), SELF("self");
+        USB("usb");
 
         companion object {
             fun fromKey(k: String) = values().firstOrNull { it.key == k }
@@ -846,9 +800,7 @@ class Settings(private val context: Context) {
     companion object {
         const val PREFS_NAME = "settings"
 
-        const val CONNECTION_TYPE_WIFI = "wifi"
         const val CONNECTION_TYPE_USB = "usb"
-        const val CONNECTION_TYPE_NEARBY = "nearby"
 
         /** SharedPreferences key; also used by [AapService] for change listener. */
         const val KEY_SYNC_MEDIA_SESSION_AA_METADATA = "sync-media-session-aa-metadata"
@@ -865,12 +817,10 @@ class Settings(private val context: Context) {
         const val KEY_NAVIGATION_VOLUME_OFFSET = "navigation-volume-offset"
 
         const val AUTO_CONNECT_LAST_SESSION = "last-session"
-        const val AUTO_CONNECT_SELF_MODE = "self-mode"
         const val AUTO_CONNECT_SINGLE_USB = "single-usb"
 
         val DEFAULT_AUTO_CONNECT_ORDER = listOf(
             AUTO_CONNECT_LAST_SESSION,
-            AUTO_CONNECT_SELF_MODE,
             AUTO_CONNECT_SINGLE_USB
         )
 
@@ -906,68 +856,6 @@ class Settings(private val context: Context) {
             }
         }
 
-        private const val KEY_BOOT_LOOP_STRIKES = "boot-loop-strikes"
-        private const val KEY_WIRELESS_PAUSED_BY_BOOT_LOOP = "wireless-paused-by-boot-loop"
-
-        /**
-         * The device-protected store, which is readable at LOCKED_BOOT_COMPLETED — before the user
-         * has unlocked, and so before ordinary preferences exist. The boot-loop counters have to
-         * live here for the same reason the auto-start flags do: they are read and written by
-         * [com.skystream.ssheadunit.app.BootCompleteReceiver] on a device that has just booted.
-         */
-        private fun bootPrefs(context: Context) =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.createDeviceProtectedStorageContext()
-                    .getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
-            } else {
-                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            }
-
-        /** Consecutive boot-started runs that did not last. See `aap/BootLoopPolicy`. */
-        fun getBootLoopStrikes(context: Context): Int = try {
-            bootPrefs(context).getInt(KEY_BOOT_LOOP_STRIKES, 0)
-        } catch (e: Exception) {
-            AppLog.d("Settings: Could not read the boot-loop strike count: ${e.message}")
-            0
-        }
-
-        fun setBootLoopStrikes(context: Context, strikes: Int) {
-            try {
-                bootPrefs(context).edit().putInt(KEY_BOOT_LOOP_STRIKES, strikes).apply()
-            } catch (e: Exception) {
-                AppLog.d("Settings: Could not store the boot-loop strike count: ${e.message}")
-            }
-        }
-
-        /**
-         * Whether wireless bring-up is currently paused because it looked like it was crashing the
-         * device. Sticky on purpose: cleared when the user opens the app, not by surviving a run,
-         * so the cycle ends outright instead of resuming every few boots.
-         */
-        fun isWirelessPausedByBootLoop(context: Context): Boolean = try {
-            bootPrefs(context).getBoolean(KEY_WIRELESS_PAUSED_BY_BOOT_LOOP, false)
-        } catch (e: Exception) {
-            AppLog.d("Settings: Could not read the boot-loop pause flag: ${e.message}")
-            false
-        }
-
-        fun setWirelessPausedByBootLoop(context: Context, paused: Boolean) {
-            try {
-                bootPrefs(context).edit()
-                    .putBoolean(KEY_WIRELESS_PAUSED_BY_BOOT_LOOP, paused)
-                    .apply()
-            } catch (e: Exception) {
-                AppLog.d("Settings: Could not store the boot-loop pause flag: ${e.message}")
-            }
-        }
-
-        /** Both counters back to their defaults, for when the user is present and can act. */
-        fun clearBootLoopState(context: Context) {
-            if (getBootLoopStrikes(context) == 0 && !isWirelessPausedByBootLoop(context)) return
-            AppLog.i("Settings: Clearing the boot-loop guard — the app was opened by hand.")
-            setBootLoopStrikes(context, 0)
-            setWirelessPausedByBootLoop(context, false)
-        }
 
         private const val KEY_AUTO_START_ON_SCREEN_ON = "auto-start-on-screen-on"
 
@@ -1023,49 +911,6 @@ class Settings(private val context: Context) {
                 deviceContext.getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
                     .edit()
                     .putBoolean(KEY_AUTO_START_ON_USB, enabled)
-                    .apply()
-            }
-        }
-
-        private const val KEY_AUTO_START_ON_WIFI = "auto-start-on-wifi"
-        private const val KEY_AUTO_START_WIFI_SSID = "auto-start-wifi-ssid"
-
-        fun isAutoStartOnWifiEnabled(context: Context): Boolean {
-            val prefs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val deviceContext = context.createDeviceProtectedStorageContext()
-                deviceContext.getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
-            } else {
-                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            }
-            return prefs.getBoolean(KEY_AUTO_START_ON_WIFI, false)
-        }
-
-        fun syncAutoStartOnWifiToDeviceStorage(context: Context, enabled: Boolean) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val deviceContext = context.createDeviceProtectedStorageContext()
-                deviceContext.getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit()
-                    .putBoolean(KEY_AUTO_START_ON_WIFI, enabled)
-                    .apply()
-            }
-        }
-
-        fun getAutoStartWifiSsid(context: Context): String {
-            val prefs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val deviceContext = context.createDeviceProtectedStorageContext()
-                deviceContext.getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
-            } else {
-                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            }
-            return prefs.getString(KEY_AUTO_START_WIFI_SSID, "") ?: ""
-        }
-
-        fun syncAutoStartWifiSsidToDeviceStorage(context: Context, ssid: String) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val deviceContext = context.createDeviceProtectedStorageContext()
-                deviceContext.getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit()
-                    .putString(KEY_AUTO_START_WIFI_SSID, ssid)
                     .apply()
             }
         }
@@ -1267,86 +1112,6 @@ class Settings(private val context: Context) {
         get() = prefs.getBoolean("auto-enable-hotspot", false)
         set(value) { prefs.edit().putBoolean("auto-enable-hotspot", value).apply() }
 
-    var waitForWifiBeforeWifiDirect: Boolean
-        get() = prefs.getBoolean("wait-for-wifi-before-wifi-direct", false)
-        set(value) { prefs.edit().putBoolean("wait-for-wifi-before-wifi-direct", value).apply() }
-
-    var waitForWifiTimeout: Int
-        get() = prefs.getInt("wait-for-wifi-timeout", 10)
-        set(value) { prefs.edit().putInt("wait-for-wifi-timeout", value).apply() }
-
-    // 0 = Common Wifi (NSD), 1 = Wifi Direct P2P, 2 = Nearby Devices, 3 = Phone Hotspot (Host), 4 = Headunit Hotspot (Passive)
-    var helperConnectionStrategy: Int
-        get() = prefs.getInt("helper-connection-strategy", 2) // Default to Nearby Devices (2)
-        set(value) = prefs.edit().putInt("helper-connection-strategy", value).apply()
-
-    var lastNearbyDeviceName: String
-        get() = prefs.getString("last-nearby-device-name", "")!!
-        set(value) = prefs.edit().putString("last-nearby-device-name", value).apply()
-
-    var bluetoothManagerServiceName: String
-        get() = prefs.getString("bluetooth-manager-service-name", "bluetooth_manager")!!
-        set(value) = prefs.edit().putString("bluetooth-manager-service-name", value).apply()
-
-    // Which network the Native AA mode (wifiConnectionMode 3) puts the phone on.
-    // 0 = WiFi Direct P2P group, 1 = this head unit's own hotspot (experimental).
-    //
-    // Deliberately not folded into helperConnectionStrategy: that setting belongs to mode 2 and
-    // means something different in every one of its five values. A wireless mode that reuses
-    // another mode's selector is how the two call sites of the old usesWifiDirect() drifted apart.
-    var nativeApTransport: Int
-        get() = prefs.getInt("native-ap-transport", 0)
-        set(value) = prefs.edit().putInt("native-ap-transport", value).apply()
-
-    // Whether the Native AA handshake opens with a WifiVersionRequest (Type 4), as real head units
-    // and the OEM ZLink app do, instead of going straight to WifiStartRequest.
-    //
-    // Off by default, deliberately: this is the only change on this route that alters what a unit
-    // with a working setup puts on the wire, and the version it announces is a guess — no capture
-    // of a real head unit's Type 4 has been decoded. A phone under test answered that guess with
-    // status=-8 and completed the handshake anyway, so the exchange is survivable on at least one
-    // Gearhead, but "survivable on one" is not a default. Left as an opt-in until a reporter whose
-    // unit broke on Android Auto 17.4 confirms it helps, since fixing that is the only reason to
-    // send it at all.
-    var nativeWifiVersionExchange: Boolean
-        get() = prefs.getBoolean("native-wifi-version-exchange", false)
-        set(value) = prefs.edit().putBoolean("native-wifi-version-exchange", value).apply()
-
-    // Manual fallback for dual-radio head units whose second radio isn't discoverable via
-    // ServiceManager.listServices() at all. Empty = disabled (rely on automatic discovery only).
-    var manualSecondaryBluetoothServiceName: String
-        get() = prefs.getString("manual-secondary-bt-service-name", "")!!
-        set(value) = prefs.edit().putString("manual-secondary-bt-service-name", value).apply()
-
-    // Which interface hosts the head unit's access point. Empty = work it out from the interface
-    // list. Worth having because every other implementation of this protocol either creates the AP
-    // itself or is told the name: aa-proxy-rs has an `iface` setting, the Pi dongles pin wlan0 in
-    // hostapd.conf, and ZLink carries an ap_NIC_name field. We are the only one reading an AP we
-    // did not create, so we are the only one that has to guess.
-    var hotspotInterface: String
-        get() = prefs.getString("hotspot-interface", "")!!
-        set(value) = prefs.edit().putString("hotspot-interface", value).apply()
-
-    // Manual override for the head unit's own access point, used first by
-    // SoftApCredentialsProvider when nativeApTransport == 1. Empty = read the system's hotspot
-    // configuration instead. Worth having because getSoftApConfiguration() is reflection over a
-    // non-public API and can simply refuse on a locked-down API 30+ device.
-    var hotspotSsid: String
-        get() = prefs.getString("hotspot-ssid", "")!!
-        set(value) = prefs.edit().putString("hotspot-ssid", value).apply()
-
-    var hotspotPassword: String
-        get() = prefs.getString("hotspot-password", "")!!
-        set(value) = prefs.edit().putString("hotspot-password", value).apply()
-
-    // Set once this device has failed to bring its own access point back up after the app took it
-    // down, which is the only way to find out that it cannot — no API answers the question in
-    // advance. From then on a user exit leaves the hotspot alone; see UserExitHotspotPolicy.
-    // Persisted rather than kept in memory because the answer is a property of the hardware and does
-    // not change between runs, and the price of re-learning it is somebody's hotspot each time.
-    var hotspotTeardownProvenUnsafe: Boolean
-        get() = prefs.getBoolean("hotspot-teardown-proven-unsafe", false)
-        set(value) = prefs.edit().putBoolean("hotspot-teardown-proven-unsafe", value).apply()
 
     var useLibusb: Boolean
         get() = prefs.getBoolean("use-libusb", false)

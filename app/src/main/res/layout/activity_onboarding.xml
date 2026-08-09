@@ -130,23 +130,7 @@
                         app:icon="@drawable/ic_usb"
                         app:iconGravity="textStart"
                         android:text="@string/onb_conn_usb_label" />
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/onb_conn_wifi"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_wifi"
-                        app:iconGravity="textStart"
-                        android:text="@string/connection_kind_wifi" />
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/onb_conn_self"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/ic_directions_car"
-                        app:iconGravity="textStart"
-                        android:text="@string/self_mode" />
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
                 <TextView
                     android:id="@+id/onb_conn_detail"
                     android:layout_width="match_parent"
@@ -456,26 +440,6 @@
                         android:textAppearance="?attr/textAppearanceBody1" />
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/onb_reopen_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <!-- WiFi-only: auto-start on WiFi -->
-                <LinearLayout
-                    android:id="@+id/onb_as_wifi_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="8dp">
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="@string/auto_start_wifi_label"
-                        android:textAppearance="?attr/textAppearanceBody1" />
-                    <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/onb_autostart_wifi_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                 </LinearLayout>

@@ -17,9 +17,6 @@
         android:name="android.hardware.screen.landscape"
         android:required="false" />
     <uses-feature
-        android:name="android.hardware.wifi"
-        android:required="false" />
-    <uses-feature
         android:name="android.hardware.location"
         android:required="false" />
     <uses-feature
@@ -294,15 +291,6 @@
             </intent-filter>
         </receiver>
 
-        <receiver
-            android:name=".app.WifiAutoStartReceiver"
-            android:directBootAware="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.net.wifi.STATE_CHANGE" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name=".main.AutomationActivity"
             android:excludeFromRecents="true"
@@ -314,7 +302,6 @@
                 <action android:name="com.skystream.ssheadunit.ACTION_SET_NIGHT_MODE" />
                 <action android:name="com.skystream.ssheadunit.ACTION_CONNECT" />
                 <action android:name="com.skystream.ssheadunit.ACTION_DISCONNECT" />
-                <action android:name="com.skystream.ssheadunit.ACTION_START_SELF_MODE" />
                 <action android:name="com.skystream.ssheadunit.ACTION_STOP_SERVICE" />
 
                 <category android:name="android.intent.category.DEFAULT" />
