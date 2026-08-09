@@ -9,8 +9,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# This workflow only ever builds main, so a fixed group keeps a single run
+# active regardless of the ref reported by the triggering event.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-main
   cancel-in-progress: true
 
 # This workflow builds a debug APK and publishes it as a release asset.

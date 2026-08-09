@@ -10,8 +10,10 @@ on:
     branches: [ main ]
 
 # Cancel superseded runs on the same ref (e.g. a new push to an open PR).
+# workflow_run events report the triggering run's ref, so main runs use a
+# fixed group to guarantee only one is active at a time.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
   cancel-in-progress: true
 
 # Read-only; this workflow needs no write scopes and touches no secrets,
