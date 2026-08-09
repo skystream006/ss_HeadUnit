@@ -83,7 +83,7 @@ jobs:
           if [ -z "$version_name" ]; then
             version_name="unknown"
           fi
-          if [ "$version_name" = "unknown" ] || [[ "$apk_filename" != *"$version_name"* ]]; then
+          if [ "$version_name" = "unknown" ]; then
             app_name="$apk_filename"
           else
             app_name="${apk_filename%%$version_name*}"
