@@ -62,7 +62,14 @@ jobs:
             echo "No APK found" >&2
             exit 1
           fi
-          publish_path="$(dirname "$apk_path")/ssheadunit-github-debug.apk"
+          apk_filename="$(basename "$apk_path" .apk)"
+          app_name="${apk_filename%%_*}"
+          version_name="$(echo "$apk_filename" | sed -E 's/^[^_]+_([^_]+).*$/\1/')"
+          if [ -z "$version_name" ] || [ "$version_name" = "$apk_filename" ]; then
+            version_name="unknown"
+          fi
+          pr_number="${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || 0 }}"
+          publish_path="$(dirname "$apk_path")/${app_name}-v${version_name}-pr${pr_number}.apk"
           cp "$apk_path" "$publish_path"
           echo "path=$publish_path" >> "$GITHUB_OUTPUT"
 

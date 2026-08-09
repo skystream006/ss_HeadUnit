@@ -17,6 +17,8 @@ Runs after `Bump Version On Merge` completes successfully on `main`, and on
 manual dispatch. Builds `:app:assembleGithubDebug`,
 uploads the generated `.apk` as a downloadable workflow artifact, and publishes
 the same file directly as a prerelease asset on the `debug-apk-latest` tag.
+The published APK is renamed to `{AppName}-v{Version}-pr{PullRequestNumber}.apk`
+(using `pr0` when no PR is associated, e.g. manual runs).
 
 ## `android-ci.yml` — Android CI
 
