@@ -223,6 +223,9 @@ class VideoDecoder(private val settings: Settings) {
 
     // Callback for transport layer integration
     var onDecoderError: (() -> Unit)? = null
+    private var decodeAttemptCount = 0
+    private var surfaceNotReadyLogged = false
+    private var dimensionsNotReadyLogged = false
 
     val videoWidth: Int get() = mWidth
     val videoHeight: Int get() = mHeight
@@ -398,6 +401,12 @@ class VideoDecoder(private val settings: Settings) {
      */
     fun decode(buffer: ByteArray, offset: Int, size: Int, forceSoftware: Boolean, codecName: String) {
         synchronized(this) {
+            decodeAttemptCount++
+            if (decodeAttemptCount <= 5 || AppLog.LOG_VERBOSE) {
+                AppLog.i("VideoDecoder: decode attempt #%d offset=%d size=%d forceSoftware=%s codecSetting=%s surfaceReady=%s configured=%s width=%d height=%d",
+                    decodeAttemptCount, offset, size, forceSoftware, codecName,
+                    mSurface?.isValid == true, codecConfigured, mWidth, mHeight)
+            }
             // Input-side liveness: bytes are arriving from the phone right now.
             lastInputBytesReceivedMs = SystemClock.elapsedRealtime()
 
@@ -494,8 +503,20 @@ class VideoDecoder(private val settings: Settings) {
                     }
                 }
 
-                if (mSurface == null || !mSurface!!.isValid) return
-                if (mWidth == 0 || mHeight == 0) return
+                if (mSurface == null || !mSurface!!.isValid) {
+                    if (!surfaceNotReadyLogged) {
+                        surfaceNotReadyLogged = true
+                        AppLog.e("VideoDecoder: Dropping decode because surface is not ready. size=$size codec=$typeToUse configured=$codecConfigured")
+                    }
+                    return
+                }
+                if (mWidth == 0 || mHeight == 0) {
+                    if (!dimensionsNotReadyLogged) {
+                        dimensionsNotReadyLogged = true
+                        AppLog.e("VideoDecoder: Dropping decode because video dimensions are unknown. size=$size codec=$typeToUse configured=$codecConfigured")
+                    }
+                    return
+                }
 
                 if (shouldUseBundledHevc(typeToUse, settings.forceSoftwareDecoding || forceSoftware)) {
                     startBundledHevc(mWidth, mHeight)

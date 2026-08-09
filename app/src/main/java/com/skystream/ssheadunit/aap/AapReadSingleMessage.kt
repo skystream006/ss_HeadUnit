@@ -10,6 +10,7 @@ internal class AapReadSingleMessage(connection: AccessoryConnection, ssl: AapSsl
     // Increase to 4MB to handle large 1080p/4K/HEVC I-frames
     private val msgBuffer = ByteArray(4 * 1024 * 1024) 
     private val fragmentSizeBuffer = ByteArray(4)
+    private var readCount = 0
 
     override fun doRead(connection: AccessoryConnection): Int {
         try {
@@ -37,6 +38,12 @@ internal class AapReadSingleMessage(connection: AccessoryConnection, ssl: AapSsl
             }
 
             recvHeader.decode()
+            readCount++
+            if (readCount <= 5 || AppLog.LOG_VERBOSE) {
+                AppLog.i("AapReadSingle: header #%d chan=%d %s flags=0x%02x enc_len=%d raw=%s",
+                    readCount, recvHeader.chan, com.skystream.ssheadunit.aap.protocol.Channel.name(recvHeader.chan),
+                    recvHeader.flags, recvHeader.enc_len, AapDiagnostics.hexPreview(recvHeader.buf))
+            }
 
             // Immediate check for Magic Garbage in the header bytes.
             // This is the most reliable path for intentional disconnects from the Helper.
@@ -52,6 +59,9 @@ internal class AapReadSingleMessage(connection: AccessoryConnection, ssl: AapSsl
                     AppLog.e("AapRead: Failed to read fragment total size. Skipping.")
                     return 0
                 }
+                AppLog.d("AapReadSingle: Fragment total-size prefix for chan=%d %s enc_len=%d prefix=%s",
+                    recvHeader.chan, com.skystream.ssheadunit.aap.protocol.Channel.name(recvHeader.chan),
+                    recvHeader.enc_len, AapDiagnostics.hexPreview(fragmentSizeBuffer))
             }
 
             // Step 2: Read the encrypted message body
@@ -80,6 +90,10 @@ internal class AapReadSingleMessage(connection: AccessoryConnection, ssl: AapSsl
                     AppLog.i("AapRead: Magic Garbage detected in decryption. Triggering clean disconnect.")
                     return -2
                 }
+                AppLog.e("AapReadSingle: decrypt returned null chan=%d %s flags=0x%02x enc_len=%d header=%s encryptedPreview=%s",
+                    recvHeader.chan, com.skystream.ssheadunit.aap.protocol.Channel.name(recvHeader.chan),
+                    recvHeader.flags, recvHeader.enc_len, AapDiagnostics.hexPreview(recvHeader.buf),
+                    AapDiagnostics.hexPreview(msgBuffer, 0, recvHeader.enc_len))
                 return 0
             }
 
