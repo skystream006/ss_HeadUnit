@@ -1710,6 +1710,18 @@ class SettingsFragment : Fragment() {
             }
         ))
 
+        items.add(SettingItem.ToggleSettingEntry(
+            stableId = "showConnectionDebugLog",
+            nameResId = R.string.show_connection_debug_log,
+            descriptionResId = R.string.show_connection_debug_log_description,
+            isChecked = settings.showConnectionDebugLog,
+            onCheckedChanged = { isChecked ->
+                settings.showConnectionDebugLog = isChecked
+                AppLog.memoryBufferEnabled = isChecked
+                updateSettingsList()
+            }
+        ))
+
         val logLevels = LogExporter.LogLevel.entries
         val logLevelNames = logLevels.map { it.name.lowercase().replaceFirstChar { c -> c.uppercase() } }.toTypedArray()
         items.add(SettingItem.SettingEntry(

@@ -667,6 +667,12 @@
     <string name="nav_action_destination">Arrival</string>
     <string name="show_fps_counter">Show FPS Counter</string>
     <string name="show_fps_counter_description">Display a real-time FPS overlay in the top-left corner during projection.</string>
+    <string name="show_connection_debug_log">Show debug log while connecting</string>
+    <string name="show_connection_debug_log_description">Display a live log on the connecting screen. It disappears as soon as the video stream is received.</string>
+    <string name="debug_log_reset">Reset log</string>
+    <string name="debug_log_export">Export log</string>
+    <string name="debug_log_cleared">Debug log cleared</string>
+    <string name="debug_log_empty">No log entries yet</string>
 
     <!-- Auto-start permission strings -->
     <string name="reopen_on_reconnection_label">Reopen on reconnection</string>

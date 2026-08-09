@@ -832,6 +832,16 @@ class Settings(private val context: Context) {
             prefs.edit().putBoolean("show-fps-counter", value).apply()
         }
 
+    /**
+     * Shows a live debug log on the connecting screen until the first video frame arrives.
+     * Also enables the in-memory log buffer used to feed that view.
+     */
+    var showConnectionDebugLog: Boolean
+        get() = prefs.getBoolean("show-connection-debug-log", false)
+        set(value) {
+            prefs.edit().putBoolean("show-connection-debug-log", value).apply()
+        }
+
     companion object {
         const val PREFS_NAME = "settings"
 

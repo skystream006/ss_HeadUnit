@@ -38,6 +38,8 @@ import com.skystream.ssheadunit.decoder.VideoDecoder
 import com.skystream.ssheadunit.decoder.VideoDimensionsListener
 import com.skystream.ssheadunit.utils.AppLog
 import com.skystream.ssheadunit.utils.IntentFilters
+import com.skystream.ssheadunit.utils.LogExporter
+import com.skystream.ssheadunit.utils.LogFilesHelper
 import com.skystream.ssheadunit.view.IProjectionView
 import com.skystream.ssheadunit.view.GlProjectionView
 import com.skystream.ssheadunit.view.ProjectionView
@@ -53,6 +55,7 @@ import com.skystream.ssheadunit.view.ProjectionViewScaler
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.widget.ImageView
+import android.widget.ScrollView
 import android.widget.VideoView
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -108,6 +111,11 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
             performanceHandler.postDelayed(this, 1000L)
         }
     }
+
+    private var debugLogPanel: View? = null
+    private var debugLogTextView: TextView? = null
+    private var debugLogScrollView: ScrollView? = null
+    private val debugLogLines = ArrayDeque<String>()
 
     private var isOrientationReceiverRegistered = false
     private var isNightModeReceiverRegistered = false
@@ -651,6 +659,9 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // Set up custom loading screen if configured
         setupCustomLoadingScreen()
 
+        // Set up the optional on-screen debug log shown while connecting
+        setupDebugLogPanel()
+
         findViewById<Button>(R.id.disconnect_button)?.setOnClickListener {
             commManager.disconnect()
             finish()
@@ -691,6 +702,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         watchdogHandler.removeCallbacks(videoWatchdogRunnable)
         watchdogHandler.removeCallbacks(reconnectingWatchdog)
         watchdogHandler.removeCallbacks(exitRunnable)
+        AppLog.setMemoryBufferListener(null)
         if (isOrientationReceiverRegistered) {
             unregisterReceiver(orientationReceiver)
             isOrientationReceiverRegistered = false
@@ -719,6 +731,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         watchdogHandler.postDelayed(watchdogRunnable, 2000)
         watchdogHandler.postDelayed(videoWatchdogRunnable, 3000)
         watchdogHandler.postDelayed(reconnectingWatchdog, 5000)
+        attachDebugLogListener()
 
 
         if (!isKeyEventReceiverRegistered) {
@@ -795,6 +808,127 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         button?.visibility = View.GONE
         stopCustomLoadingMedia()
         touchOverlayView?.requestFocus()
+    }
+
+    /**
+     * Prepares the on-screen debug log shown on top of the loading overlay while the
+     * connection is being established. It is torn down again by [hideDebugLogPanel]
+     * as soon as the first video frame is rendered.
+     */
+    private fun setupDebugLogPanel() {
+        if (!settings.showConnectionDebugLog) return
+        if (overlayState == OverlayState.HIDDEN) return
+
+        val panel = findViewById<View>(R.id.debug_log_panel) ?: return
+        debugLogPanel = panel
+        debugLogTextView = findViewById(R.id.debug_log_text)
+        debugLogScrollView = findViewById(R.id.debug_log_scroll)
+
+        findViewById<Button>(R.id.debug_log_reset_button)?.setOnClickListener {
+            AppLog.clearMemoryBuffer()
+            renderDebugLog(emptyList())
+            Toast.makeText(this, R.string.debug_log_cleared, Toast.LENGTH_SHORT).show()
+        }
+        findViewById<Button>(R.id.debug_log_export_button)?.setOnClickListener {
+            exportDebugLog()
+        }
+
+        panel.visibility = View.VISIBLE
+        panel.bringToFront()
+        renderDebugLog(AppLog.memoryBufferSnapshot())
+    }
+
+    private fun attachDebugLogListener() {
+        if (overlayState == OverlayState.HIDDEN) return
+        if (debugLogPanel?.visibility != View.VISIBLE) return
+        renderDebugLog(AppLog.memoryBufferSnapshot())
+        AppLog.setMemoryBufferListener { line ->
+            runOnUiThread { appendDebugLogLine(line) }
+        }
+    }
+
+    private fun hideDebugLogPanel() {
+        AppLog.setMemoryBufferListener(null)
+        debugLogPanel?.visibility = View.GONE
+        debugLogLines.clear()
+    }
+
+    private fun renderDebugLog(lines: List<String>) {
+        debugLogLines.clear()
+        debugLogLines.addAll(lines)
+        debugLogTextView?.text = if (debugLogLines.isEmpty()) {
+            getString(R.string.debug_log_empty)
+        } else {
+            debugLogLines.joinToString("\n")
+        }
+        scrollDebugLogToBottom()
+    }
+
+    private fun appendDebugLogLine(line: String) {
+        if (debugLogPanel?.visibility != View.VISIBLE) return
+        val wasEmpty = debugLogLines.isEmpty()
+        debugLogLines.addLast(line)
+        if (debugLogLines.size > AppLog.MEMORY_BUFFER_MAX_LINES) {
+            // Rebuild in one go instead of trimming the TextView on every single line
+            while (debugLogLines.size > AppLog.MEMORY_BUFFER_MAX_LINES) {
+                debugLogLines.removeFirst()
+            }
+            debugLogTextView?.text = debugLogLines.joinToString("\n")
+        } else if (wasEmpty) {
+            debugLogTextView?.text = line
+        } else {
+            debugLogTextView?.append("\n$line")
+        }
+        scrollDebugLogToBottom()
+    }
+
+    private fun scrollDebugLogToBottom() {
+        val scrollView = debugLogScrollView ?: return
+        scrollView.post { scrollView.fullScroll(View.FOCUS_DOWN) }
+    }
+
+    /** Writes the currently displayed debug log to a file and offers to share it. */
+    private fun exportDebugLog() {
+        val lines = AppLog.memoryBufferSnapshot()
+        if (lines.isEmpty()) {
+            Toast.makeText(this, R.string.debug_log_empty, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val logFile = try {
+            val logDir = LogFilesHelper.resolveLogDirectory(this, settings)
+            if (logDir == null) {
+                null
+            } else {
+                LogFilesHelper.ensureDirectory(logDir)
+                LogFilesHelper.rotateLogs(logDir)
+                LogFilesHelper.createTimestampedLogFile(logDir).apply {
+                    writeText(lines.joinToString("\n") + "\n")
+                }
+            }
+        } catch (e: Exception) {
+            AppLog.e("Failed to export debug log: ${e.message}")
+            null
+        }
+
+        if (logFile == null) {
+            Toast.makeText(this, R.string.failed_export_logs, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        MaterialAlertDialogBuilder(this, R.style.DarkAlertDialog)
+            .setTitle(R.string.logs_exported)
+            .setMessage(getString(R.string.log_saved_to, logFile.absolutePath))
+            .setPositiveButton(R.string.share) { _, _ ->
+                try {
+                    LogExporter.shareLogFile(this, logFile)
+                } catch (e: Exception) {
+                    AppLog.e("Failed to share debug log: ${e.message}")
+                    Toast.makeText(this, R.string.failed_export_logs, Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(R.string.close, null)
+            .show()
     }
 
     private fun setupCustomLoadingScreen() {
@@ -974,6 +1108,9 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     private fun hideLoadingOverlay(loadingOverlay: View?) {
         overlayState = OverlayState.HIDDEN
         AppLog.i("Hiding loading overlay after first video frame")
+
+        // Video is flowing — the connection debug log is no longer needed
+        hideDebugLogPanel()
 
         // CRITICAL: Stop custom video FIRST — VideoView/SurfaceView has its own
         // rendering layer that ignores parent alpha animations and can stay visible
@@ -1502,6 +1639,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // and the Ken Burns animator outlive the view hierarchy briefly.
         // stopCustomLoadingMedia releases both.
         stopCustomLoadingMedia()
+        AppLog.setMemoryBufferListener(null)
         stopPerformanceOverlayUpdates()
         performanceExecutor.shutdownNow()
         AppLog.i("AapProjectionActivity.onDestroy called. isFinishing=$isFinishing")
