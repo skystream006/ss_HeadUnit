@@ -1,76 +1,4 @@
-# ssHeadUnit
-
-ssHeadUnit is a copy of [Open Headunit](https://github.com/andreknieriem/open-headunit) by André Knieriem,
-renamed for this repository. It keeps the upstream GPLv3 license and all original copyright notices.
-
-<a href='https://play.google.com/store/apps/details?id=com.andrerinas.headunitrevived'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="200"/></a>
-<a href='http://www.amazon.com/gp/mas/dl/android?p=com.andrerinas.headunitrevived'><img alt='Available at Amazon Appstore' src='https://images-na.ssl-images-amazon.com/images/G/01/mobile-apps/devportal2/res/images/amazon-appstore-badge-english-black.png' width="200"/></a>
-
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/579b7b03-23e0-4eda-a05d-c51d28a72113"
-    alt="Headunit Logo"
-    height="200">
-</p>
-
-Open Headunit is an Android app that allows you to turn your Android tablet or phone into an Android Auto receiver. This project is a revived version of the original headunit project by the great Michael Reid. The original project can be found here:
-https://github.com/mikereidis/headunit
-
-## NOTE!
-**Android Auto 17.4 will break nearly every wireless connection with self mode included, which is not native or with the headunit server. So Wireless Helper won't work anymore.
-We hope, that Google will take back these changes in the next Android Auto update, but until then, we have to wait. If you want to use wireless connection, please use the native connection method or the headunit server on your phone or buy a wireless Android Auto USB Dongle.**
-
-## Screenshots
-<img width="1280" height="800" alt="image" src="https://github.com/user-attachments/assets/22abbc13-75d5-436f-b0ae-2e92b7648d50" />
-<img width="1280" height="800" alt="image" src="https://github.com/user-attachments/assets/f81149b3-a844-4657-87d2-a2867a5eb030" />
-<img width="1280" height="800" alt="image" src="https://github.com/user-attachments/assets/140bbfdb-5b4f-4d49-a419-85aa91b48371" />
-
-## How to use
-**Check out the [Wiki](https://github.com/andreknieriem/open-headunit/wiki) for detailed documentation, setup guides and troubleshooting!**
-
-### Wired USB Connection
-- Connect your Android device (phone) to the tablet running Open Headunit via USB cable.
-- Make sure that Android Auto is installed on your phone.
-- Set your phone to Host-Mode if nescessary and select Android Auto
-- Click the USB Button in Open Headunit, find your phone and click the right button to allow connection
-- Click on your phone in the list and wait for Android Auto to start
-
-### Wireless Helper (Recommended)
-This is the most reliable way to connect wirelessly. It uses our companion app on your phone to trigger the connection.
-
-- **Download:** [Wireless Helper on Google Play Store](https://play.google.com/store/apps/details?id=com.andrerinas.wirelesshelper)
-- **Features:** Minimal configuration, supports NSD, Wi-Fi Direct Auto-Connect, and Bluetooth Auto-Start.
-
-**Setup:**
-- In Open Headunit Settings: Set **Wireless Mode** to **Helper Mode**.
-- Ensure both devices are in the same network (Hotspot or WiFi).
-- Open the Wireless Helper app on your phone and start the service.
-- The helper will find your headunit and initiate the connection automatically.
-
-### Legacy Wireless Options
-- **Wireless Launcher:** You can still use the original [Wireless Launcher](https://play.google.com/store/apps/details?id=com.borconi.emil.wifilauncherforhur) by Emil Borconi.
-- **Manual / Native:** Uses the native "Headunit Server" built into Android Auto developer settings (may fail on 10.x.x.x networks).
-
-### Connect Wirelessly via Intent (Power Users)
-You can trigger a wireless connection attempt using an Android Intent. This is useful for automation tools like **Tasker**, **MacroDroid**, or via **ADB**.
-
-**URI Scheme:** `headunit://connect?ip=<PHONE_IP>`
-
-**Example ADB Command:**
-```bash
-adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.168.1.25"
-```
-
-## Known Issues
-- **Google Maps in Portrait Mode:** Touch interactions (searching, scrolling) within Google Maps may not work as expected when using Portrait Mode on some devices. **Fix:** Try reducing the **Pixel density (DPI)** setting to **below 200** (e.g., 190) in the app settings. This often restores full functionality.
-- **Wireless Connection Drops:** If the connection drops frequently, disable **"WiFi Assistant"** or **"Switch between networks"** in your phone's WiFi settings to prevent it from killing the connection due to "no internet." Check battery saving options.
-- **Self-mode on Android 10 (Q) and below:** Google has disabled the automatic wireless projection startup for Android 10 and below in Android Auto versions 16.4 and higher. While Self-mode still works on newer Android versions, it is normally impossible to trigger projection on Android 10 and below directly with recent Google app updates. **Workaround:** You can still use Self-mode on these devices by starting the built-in Android Auto Headunit Server and connecting via Wi-Fi mode (loopback). See the [Troubleshooting Guide](https://github.com/andreknieriem/open-headunit/wiki/Troubleshooting#self-mode-on-android-10-q-and-below) for step-by-step instructions.
-- **WiFi-Direct needs long to connect:** A user finds that this is related to Google Assistant instead of Gemini for AA. If you use Gemini on newer AA versions it just runs smooth again. No idea why this happens.
-- **Stuck on Android is starting** Check your video codec in the settings and set it to h264 if you have a device which does not support h265. Some devices have a broken h265 decoder and this will cause the app to stuck on "Android is starting" and never start the projection.
-
-## Planned
-- more customization options for the UI and the app itself
-
-## Changelog
+# Changelog
 ### v.3.2.3
 - Adding custom log location (App folder or Download folder)
 - additional fixing for the fps/freeze problems. Thanks to @o-jcardenass and @andrecuellar for helping
@@ -85,8 +13,7 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - added new native mode without WiFi-Direct creation, thanks to @o-jcardenass
 
 ### v.3.2.1
-- Fixing new welcome screen reappears, thanks to @andrecuellar
-- Fixing screen flicker every 10s thanks to @o-jcardenass
+- Fixing new welcome screen, thanks to @andrecuellar
 - Fixing HW decoding on kitkat thanks to @o-jcardenass
 - Fixing 2 Fatal errors shown in play console
 - fix: move mic timestamp inside encrypted payload (byte 4), thanks to @bruno303
@@ -128,7 +55,9 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Fixed: App Exit on Disconnect
 - Enhanced: USB Workflow. This will hopefully eliminate some random usb disconnects
 - Fixed keyboard input on Android < 6 Devices
-- Enhanced WiFi Direct-Mode
+- Enhanced Wi-Fi Direct-Mode
+- Added: Bundled FFmpeg HEVC decoder with decoder source setting and FPS/performance overlay
+- Enhanced: HEVC GLES/YUV rendering latency, audio buffering, and Wi-Fi Direct fallback reliability
 - Enhanced File Selector for some devices
 - Fixed some fatal errors, showing in play console
 
@@ -155,11 +84,11 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 
 ### v.2.3.1
 - Fixed a connection lost on for example borders
-- Binding socket to wifi network if available to prevent connection drops on carrier lost
+- Binding socket to Wi-Fi network if available to prevent connection drops on carrier lost
 - Added Static Audio Focus Toggle to prevent audio focus loss on some devices
 - Fixing samsung routines and modes
 - Fixing wrong orientation on start if holding the phone wrong. Now uses the orientation from settings
-- Try to fix usb errors with AAwireless Dongles
+- Fixing usb errors with AAwireless Dongles
 - Added Audio Mixer to mix different audio tracks, thanks to @jeffdapaz for the idea
 - Added Autostart on BT for multiple devices
 - Fixed Microphone input source was wrong mapped
@@ -181,7 +110,7 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Moved Mic settings to own fragment and added 3 new options for the new mic enhancement from version 2.2.2, which defaults to off for better compatibility
 - Merged PR #481 - Apply MediaTek 60fps and audio optimizations, thanks to @mrkontrast-coder
 - Some rewrite of the AudioTrackWrapper, to enhance stability and minimize stutters
-- Merged PR #490 - Add UI scale settings, thanks to @Anton11111
+- Merged PR #490 - Add UI scale settings, thanks to @Anton111111
 - Merged PR #502 - Navigation Broadcast Updates. Thanks to @Bastel2020
 
 ### v.2.2.2
@@ -192,9 +121,8 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Extend mic debugging and add NoiseSuppressor, AutomaticGainControl and AcousticEchoCanceler for better voice quality
 - Fixed an issue where the Android USB system prompt wouldn't appear for phones. The prompt is now enabled by default and can be separately disabled for USB thumb drives. It calls "Listen for USB Devices" setting and it decouples the system USB prompt from the Auto-Start behavior. This will bring back the old functionality for all and can be disabled for those who are annoyed of the popup for non Android Auto devices
 - Fixed: Rescale and UpdateUI if the useable area differs from the one negiotated. This happens on devices which lie about their navbars.
-- Fixed: Fatal Crash on devices below lollipop on disconnection
-- Fixed: Auto-Night mode over 3 hours of in the UK and other countries, thanks to @BinarySimple17
 - Add separate audio streams setting and update related functionality thanks to @Anton111111
+- Fixed: Auto-Night mode over 3 hours of in the UK and other countries, thanks to @BinarySimple17
 - Enhanced: When audio sink is off, the app no longer tries to get media focus at all
 
 ### v.2.2.1
@@ -228,7 +156,6 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Added: Fake VPN Handler for new Android Auto in offline mode. It is no longer possible to send a network to AA, so we need this hack, if your device is offline
 - Enhanced: Audio-Focus is now more aggressive to hopefully fix the audio is not coming from my tablet/headunit errors
 - Added: Auto-Boot Functionality. Thanks to @andrecuellar
-- Attention: Needed to split Github and Playstore Release. Google does not allow using Fake VPN for offline selfmode. This is now not included in the playstore release!
 
 ### v.2.1.0
 - Fixed: Exit Intent not working. Thanks to benyjr
@@ -292,14 +219,17 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Merged auto connect usb feature, thanks to @andrecuellar
 
 ### v.1.14.3
-- **Automation:** Added App Shortcuts for Samsung Modes & Routines support.
-- **Navigation:** Officially registered as a navigation provider (compatible with NAV buttons).
-- **Stability:** Fixed rare app freezes by improving internal data handling and memory hygiene.
-- **Compatibility:** Improved hardware support for Amazon Fire Tablets and GPS-less devices.
+- New Feature: Added **App Shortcuts** for quick Connect/Disconnect. Now compatible with Samsung Modes & Routines.
+- New Feature: Registered OpenHU as an official system navigation provider (Category: Maps).
+- Improvement: Added `headunit://disconnect` intent for remote session termination.
+- Fixed: Resolved potential app freezes during long-running sessions by optimizing memory hygiene and FIFO handling.
+- Compatibility: Improved support for Amazon Fire Tablets and devices without GPS hardware by marking hardware features as optional.
 
 ### v.1.14.2
+- Bugfix: Resolved `SuperNotCalledException` crash in MainActivity.
 - Bugfix: Notification and Exit Button do not close the app
 - Improvement: Removed old legacy Invisible Bluetooth Setting to prevent Bluetooth from start on the whole time
+- Localization: Corrected "Version" translations in multiple languages.
 
 ### v.1.14.1
 - Improvement: Integrated USB Auto-Connect into "Auto-Connect Last Session". App now behaves like a native headunit and connects automatically on startup or USB plug-in.
@@ -382,7 +312,8 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - New Feature: Screen-Orientation Feature to lock to a certain orientation (Landscape/Portrait) #69 thanks to @JanRi3D
 - Enhancement: SSL will now attempt multiple times and not break instantly thanks to @MicaelJarniac
 - Added: Chinese(Traditional) translation 🇹🇼 thanks to @GazCore
-- Added: Czech translation 🇨🇿 thanks to @teodortomas #75
+- Added: Polish translation 🇵🇱 thanks to @Kacper1263
+- Added: Czech translation 🇨🇿 thanks to @teodortomas
 - Fixed brazilian portuguese folder name
 
 ### v.1.10.1
@@ -416,18 +347,6 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - UI: Consistent Dialog Theme (Teal/Rounded) and improved list buttons
 - Compatibility: Verified support for Android 4.1+ (minSdk 16)
 - Compatibility: Bring back native SSL Support (JNI) for better performance on older devices (Toggle in Debug Settings)
-
-### v.1.8.1
-- Fixed Fullscreen/Non-Fullscreen layout issues (black bars, overlapping)
-
-### v.1.8.0
-- Added Audio Sink Setting (Enable/Disable routing audio to HU)
-- Added AAC Audio Support Setting (Experimental)
-- Fixed audio stuttering issues by reverting buffering logic to v.1.4.1 defaults
-- Restored robust video decoder logic (SPS Parsing) to fix black screen/crashes on Mediatek devices
-- Fixed visual glitches on navigation bar and fullscreen transitions
-- Improved list item UI with better click feedback
-- Fixed SSL decryption crash (ArrayIndexOutOfBoundsException)
 
 ### v.1.7.0
 - Added WiFi Network Discovery (Port Scan) with Auto-Connect
@@ -509,25 +428,3 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Improved compatibility with newer Android versions.
 - Added Multitouch-Support
 - Some sort of wireless support with Headunit-Server on Phone
-
-## Contributing
-
-Creating release apk needs a keystore file. You can create your own keystore file using the following command in root folder:
-`keytool -genkey -v -keystore headunit-release-key.jks -alias headunit-revived -keyalg RSA -keysize 2048 -validity 10000`
-
-After that you need to set the env variables depending on your OS:
-MAC:
-open ~/.zshrc or ~/.bashrc
-
-`sudo nano ~/.zshrc or sudo nano ~/.bashrc`
-`export HEADUNIT_KEYSTORE_PASSWORD="YOUR_KEYSTORE_PASSWORD"
-export HEADUNIT_KEY_PASSWORD="YOUR_KEY_PASSWORD"`
-
-## Original Headunit
-Headunit for Android Auto (tm)
-
-A new car or a $600+ headunit is NOT required to enjoy the integration and distraction reduced environment of Android Auto.
-
-This headunit app can turn a Android 4.1+ tablet supporting USB Host mode into a basic Android Auto compatible headunit.
-
-Android, Google Play, Google Maps, Google Play Music and Android Auto are trademarks of Google Inc.
