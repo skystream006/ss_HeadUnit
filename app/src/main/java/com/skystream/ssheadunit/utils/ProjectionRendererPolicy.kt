@@ -33,7 +33,7 @@ object ProjectionRendererPolicy {
     }
 
     private fun isLegacyRockchip(fields: List<String>): Boolean {
-        val legacyRockchipIds = listOf("rk3066", "rk3188", "rk3288", "rk3368", "rk30")
+        val legacyRockchipIds = listOf("rk3066", "rk3188", "rk3288", "rk3368", "rk30sdk")
         return fields.any { field -> legacyRockchipIds.any { field.contains(it) } }
     }
 }
