@@ -54,6 +54,18 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :app:assembleGithubDebug --no-daemon --stacktrace
 
+      - name: Resolve PR number
+        id: pr
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            pr_number=$(jq -r '.pull_request.number // 0' "$GITHUB_EVENT_PATH")
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            pr_number=$(jq -r '.workflow_run.pull_requests[0].number // 0' "$GITHUB_EVENT_PATH")
+          else
+            pr_number=0
+          fi
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+
       - name: Locate debug APK
         id: apk
         run: |
@@ -68,7 +80,7 @@ jobs:
           if [ -z "$version_name" ] || [ "$version_name" = "$apk_filename" ]; then
             version_name="unknown"
           fi
-          pr_number="${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number || 0 }}"
+          pr_number="${{ steps.pr.outputs.number }}"
           publish_path="$(dirname "$apk_path")/${app_name}-v${version_name}-pr${pr_number}.apk"
           cp "$apk_path" "$publish_path"
           echo "path=$publish_path" >> "$GITHUB_OUTPUT"
