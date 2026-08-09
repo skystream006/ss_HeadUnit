@@ -26,7 +26,6 @@ object ProjectionRendererPolicy {
 
     private fun isLegacyRockchip(hardware: String?, board: String?): Boolean {
         return matchesAny(hardware, legacyRockchipHardwareIds) ||
-            matchesAny(board, legacyRockchipHardwareIds) ||
             matchesAny(board, legacyRockchipBoardIds)
     }
 
