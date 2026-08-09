@@ -194,15 +194,21 @@ android {
         }
     }
 
+    val pullRequestNumber = System.getenv("GITHUB_REF")
+        ?.let { Regex("""refs/pull/(\d+)/merge""").find(it)?.groupValues?.get(1) }
+        ?: System.getenv("PR_NUMBER")
+
     applicationVariants.all {
         val variant = this
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                var outputFileName = "${variant.applicationId}_${variant.versionName}_debug.apk"
-                if(variant.buildType.name == "release") {
-                    outputFileName = "${variant.applicationId}_${variant.versionName}.apk"
-                    output.outputFileName = outputFileName
+                val outputFileName = if (variant.buildType.name == "release") {
+                    "${variant.applicationId}_${variant.versionName}.apk"
+                } else if (!pullRequestNumber.isNullOrBlank()) {
+                    "ssHeadUnit-v${variant.versionName}-pr${pullRequestNumber}.apk"
+                } else {
+                    "${variant.applicationId}_${variant.versionName}_debug.apk"
                 }
                 output.outputFileName = outputFileName
             }
