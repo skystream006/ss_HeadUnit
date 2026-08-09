@@ -32,13 +32,26 @@ internal class AapMessageIncoming(header: EncryptedHeader, ba: ByteArrayWithLimi
     companion object {
 
         fun decrypt(header: EncryptedHeader, offset: Int, buf: ByteArray, ssl: AapSsl): AapMessage? {
-            if (header.flags and 0x08 != 0x08) {
-                AppLog.e("WRONG FLAG: enc_len: %d  chan: %d %s flags: 0x%02x  msg_type: 0x%02x %s",
-                        header.enc_len, header.chan, Channel.name(header.chan), header.flags, header.msg_type, MsgType.name(header.msg_type, header.chan))
+            val ba = if (header.flags and 0x08 == 0x08) {
+                ssl.decrypt(offset, header.enc_len, buf)
+            } else {
+                val available = buf.size - offset
+                if (header.enc_len <= 0 || header.enc_len > available) {
+                    AppLog.e("Invalid plaintext payload length: enc_len=%d available=%d chan=%d flags=0x%02x",
+                        header.enc_len, available, header.chan, header.flags)
+                    return null
+                }
+                // Some adapters can emit plaintext AAP control frames after TLS setup.
+                // These frames already contain [msg_type + payload], so parse them directly.
+                AppLog.w("Plaintext AAP frame detected: enc_len=%d chan=%d %s flags=0x%02x",
+                    header.enc_len, header.chan, Channel.name(header.chan), header.flags)
+                ByteArrayWithLimit(buf.copyOfRange(offset, offset + header.enc_len), header.enc_len)
+            }
+            if (ba == null) {
+                AppLog.e("Decrypt failed: enc_len: %d  chan: %d %s flags: 0x%02x  msg_type: 0x%02x %s",
+                    header.enc_len, header.chan, Channel.name(header.chan), header.flags, header.msg_type, MsgType.name(header.msg_type, header.chan))
                 return null
             }
-
-            val ba = ssl.decrypt(offset, header.enc_len, buf) ?: return null
 
             if (ba.data.size < 2) {
                 AppLog.e("Decrypted payload too short: " + ba.data.size)
