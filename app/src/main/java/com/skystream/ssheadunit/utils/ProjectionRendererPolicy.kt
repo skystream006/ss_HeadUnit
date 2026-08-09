@@ -4,13 +4,17 @@ import android.os.Build
 import java.util.Locale
 
 object ProjectionRendererPolicy {
-    fun defaultViewModeForCurrentDevice(): Settings.ViewMode =
+    private val currentDeviceDefault by lazy {
         defaultViewMode(
             hardware = Build.HARDWARE,
             board = Build.BOARD,
             manufacturer = Build.MANUFACTURER,
             model = Build.MODEL
         )
+    }
+
+    fun defaultViewModeForCurrentDevice(): Settings.ViewMode =
+        currentDeviceDefault
 
     fun defaultViewMode(
         hardware: String?,
@@ -21,7 +25,7 @@ object ProjectionRendererPolicy {
         val fields = listOf(hardware, board, manufacturer, model)
             .map { it.orEmpty().lowercase(Locale.ROOT) }
 
-        return if (isLegacyRockchip(fields) || fields.any { it.contains("autopro x") }) {
+        return if (isLegacyRockchip(fields)) {
             Settings.ViewMode.SURFACE
         } else {
             Settings.ViewMode.TEXTURE
