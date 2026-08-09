@@ -10,9 +10,7 @@ class ProjectionRendererPolicyTest {
             Settings.ViewMode.SURFACE,
             ProjectionRendererPolicy.defaultViewMode(
                 hardware = "rk3288",
-                board = "rk30sdk",
-                manufacturer = "rockchip",
-                model = "AutoPro X"
+                board = "rk30sdk"
             )
         )
     }
@@ -23,9 +21,7 @@ class ProjectionRendererPolicyTest {
             Settings.ViewMode.SURFACE,
             ProjectionRendererPolicy.defaultViewMode(
                 hardware = "rk3288",
-                board = "rk3288_box",
-                manufacturer = "unknown",
-                model = "Head Unit"
+                board = "rk3288_box"
             )
         )
     }
@@ -36,9 +32,7 @@ class ProjectionRendererPolicyTest {
             Settings.ViewMode.TEXTURE,
             ProjectionRendererPolicy.defaultViewMode(
                 hardware = "qcom",
-                board = "kalama",
-                manufacturer = "Google",
-                model = "Pixel"
+                board = "kalama"
             )
         )
     }
