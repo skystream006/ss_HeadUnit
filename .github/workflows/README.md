@@ -3,8 +3,8 @@
 ## `build-debug-apk.yml` — Debug APK delivery
 
 Runs on pushes to `main` and manual dispatch, builds `:app:assembleGithubDebug`,
-and publishes the generated `.apk` directly as a prerelease asset on the
-`debug-apk-latest` tag.
+uploads the generated `.apk` as a downloadable workflow artifact, and publishes
+the same file directly as a prerelease asset on the `debug-apk-latest` tag.
 
 ## `android-ci.yml` — Android CI
 
