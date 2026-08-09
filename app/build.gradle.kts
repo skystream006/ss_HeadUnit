@@ -194,8 +194,9 @@ android {
         }
     }
 
+    val pullRequestRefRegex = Regex("""refs/pull/(\d+)/merge""")
     val pullRequestNumber = System.getenv("GITHUB_REF")
-        ?.let { Regex("""refs/pull/(\d+)/merge""").find(it)?.groupValues?.get(1) }
+        ?.let { pullRequestRefRegex.find(it)?.groupValues?.get(1) }
         ?: System.getenv("PR_NUMBER")
 
     applicationVariants.all {
