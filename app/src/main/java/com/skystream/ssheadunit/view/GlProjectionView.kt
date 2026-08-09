@@ -28,6 +28,7 @@ class GlProjectionView(context: Context) : GLSurfaceView(context), IProjectionVi
 
     init {
         setEGLContextClientVersion(2)
+        setEGLConfigChooser(8, 8, 8, 8, 16, 0)
         renderer = VideoRenderer()
         setRenderer(renderer)
         renderMode = RENDERMODE_WHEN_DIRTY
