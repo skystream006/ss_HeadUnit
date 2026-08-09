@@ -48,7 +48,7 @@ internal class AapMessageIncoming(header: EncryptedHeader, ba: ByteArrayWithLimi
                 ByteArrayWithLimit(buf.copyOfRange(offset, offset + header.enc_len), header.enc_len)
             }
             if (ba == null) {
-                AppLog.e("WRONG FLAG: enc_len: %d  chan: %d %s flags: 0x%02x  msg_type: 0x%02x %s",
+                AppLog.e("Decrypt failed: enc_len: %d  chan: %d %s flags: 0x%02x  msg_type: 0x%02x %s",
                     header.enc_len, header.chan, Channel.name(header.chan), header.flags, header.msg_type, MsgType.name(header.msg_type, header.chan))
                 return null
             }
