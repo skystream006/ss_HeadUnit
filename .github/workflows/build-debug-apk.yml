@@ -62,7 +62,7 @@ jobs:
             echo "No APK found" >&2
             exit 1
           fi
-          publish_path="app/build/outputs/apk/github/debug/ssheadunit-github-debug.apk"
+          publish_path="$(dirname "$apk_path")/ssheadunit-github-debug.apk"
           cp "$apk_path" "$publish_path"
           echo "path=$publish_path" >> "$GITHUB_OUTPUT"
 
