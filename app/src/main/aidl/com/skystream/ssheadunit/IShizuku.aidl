@@ -1,0 +1,1 @@
+package com.skystream.ssheadunit;interface IShizuku {    int execShell(String command);}

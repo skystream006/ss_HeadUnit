@@ -8,7 +8,7 @@ plugins {
 
 android {
     compileSdk = 34
-    namespace = "com.andrerinas.openheadunit.contract"
+    namespace = "com.skystream.ssheadunit.contract"
 
     defaultConfig {
         minSdk = 16

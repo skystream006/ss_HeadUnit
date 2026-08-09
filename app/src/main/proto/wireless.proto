@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-package com.andrerinas.openheadunit.aap.protocol.proto;
+package com.skystream.ssheadunit.aap.protocol.proto;
 
 // The Android Auto WiFi Projection Protocol, spoken over RFCOMM before the phone joins our
 // network. The "type N" in each comment is the message type from the wire header (see
