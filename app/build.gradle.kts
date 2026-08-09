@@ -70,8 +70,8 @@ android {
         applicationId = "com.skystream.ssheadunit"
         minSdk = 16
         targetSdk = 36
-        versionCode = 97
-        versionName = "3.2.4"
+        versionCode = 98
+        versionName = "3.2.5"
         setProperty("archivesBaseName", "${applicationId}_${versionName}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
