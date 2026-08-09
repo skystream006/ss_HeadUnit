@@ -83,7 +83,7 @@ jobs:
           if [ -z "$version_name" ]; then
             version_name="unknown"
             echo "Warning: Unable to extract version from APK filename '$apk_filename'; using fallback." >&2
-            app_name="$apk_filename"
+            app_name="app"
           else
             app_name="${apk_filename%"$version_name"*}"
             app_name="${app_name%[-_]}"
