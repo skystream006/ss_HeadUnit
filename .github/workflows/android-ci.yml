@@ -1,13 +1,19 @@
 name: Android CI
 
+# On main this is chained off "Bump Version On Merge" (which runs on pushes to
+# main) so the version bump always lands before these builds.
 on:
   pull_request:
-  push:
+  workflow_run:
+    workflows: ["Bump Version On Merge"]
+    types: [completed]
     branches: [ main ]
 
 # Cancel superseded runs on the same ref (e.g. a new push to an open PR).
+# workflow_run events report the triggering run's ref, so main runs use a
+# fixed group to guarantee only one is active at a time.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
   cancel-in-progress: true
 
 # Read-only; this workflow needs no write scopes and touches no secrets,
@@ -18,10 +24,17 @@ permissions:
 jobs:
   build:
     name: Build (github debug)
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      # For workflow_run events the default checkout is the pre-bump commit,
+      # so main is checked out explicitly to pick up the bumped version.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'main' }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -65,10 +78,16 @@ jobs:
 
   unit-test:
     name: Unit tests (github debug)
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      # See the build job for why main is checked out explicitly.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'main' }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4

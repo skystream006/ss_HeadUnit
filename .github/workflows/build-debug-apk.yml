@@ -1,12 +1,18 @@
 name: Build Debug APK
 
+# Chained off "Bump Version On Merge" (which runs on pushes to main) so the
+# published APK always carries the freshly bumped version.
 on:
-  push:
+  workflow_run:
+    workflows: ["Bump Version On Merge"]
+    types: [completed]
     branches: [ main ]
   workflow_dispatch:
 
+# This workflow only ever builds main, so a fixed group keeps a single run
+# active regardless of the ref reported by the triggering event.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-main
   cancel-in-progress: true
 
 # This workflow builds a debug APK and publishes it as a release asset.
@@ -16,11 +22,18 @@ permissions:
 jobs:
   build:
     name: Assemble github debug APK
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     steps:
+      # Explicit ref: for workflow_run events the default checkout is the
+      # pre-bump commit that triggered the bump workflow.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4

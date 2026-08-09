@@ -1,14 +1,27 @@
 # Continuous Integration
 
+## `bump-version-on-merge.yml` — Version bump
+
+Runs on every push to `main` (including PR merges) and bumps the `versionName`
+patch and `versionCode` in `app/build.gradle.kts`, committing the result back to
+`main`. It runs **before** the build workflows: both `build-debug-apk.yml` and
+the `main` half of `android-ci.yml` are chained off it via `workflow_run`, so
+every build packages the freshly bumped version. Those chained builds check out
+`main` explicitly, because a `workflow_run` event points at the pre-bump commit.
+The bump commit is pushed with `GITHUB_TOKEN`, which does not re-trigger
+workflows, so the chain cannot loop.
+
 ## `build-debug-apk.yml` — Debug APK delivery
 
-Runs on pushes to `main` and manual dispatch, builds `:app:assembleGithubDebug`,
+Runs after `Bump Version On Merge` completes successfully on `main`, and on
+manual dispatch. Builds `:app:assembleGithubDebug`,
 uploads the generated `.apk` as a downloadable workflow artifact, and publishes
 the same file directly as a prerelease asset on the `debug-apk-latest` tag.
 
 ## `android-ci.yml` — Android CI
 
-Runs on every pull request and on pushes to `main`. Two parallel jobs:
+Runs on every pull request, and on `main` after `Bump Version On Merge`
+completes successfully. Two parallel jobs:
 
 | Check                        | What it does                                   | Intended to block? |
 |------------------------------|------------------------------------------------|:------------------:|

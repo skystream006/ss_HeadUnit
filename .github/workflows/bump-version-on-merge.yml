@@ -1,16 +1,23 @@
 name: Bump Version On Merge
 
+# Runs on every push to main (merges included) so the version is bumped
+# *before* the build workflows run. Those builds are chained off this
+# workflow via `workflow_run`, so they always package the bumped version.
+# The bump commit is pushed with GITHUB_TOKEN, which does not re-trigger
+# workflows, so this cannot loop.
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches: [main]
 
 permissions:
   contents: write
 
+concurrency:
+  group: bump-version-main
+  cancel-in-progress: false
+
 jobs:
   bump-version:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
