@@ -6,12 +6,13 @@ internal object AapDiagnostics {
         val end = (offset + length).coerceAtMost(buffer.size)
         val previewLength = maxBytes.coerceIn(0, end - offset)
         val previewEnd = offset + previewLength
+        val requestedEnd = offset.toLong() + length.toLong()
         val sb = StringBuilder()
         for (i in offset until previewEnd) {
             if (sb.isNotEmpty()) sb.append(' ')
             sb.append(String.format("%02X", buffer[i].toInt() and 0xFF))
         }
-        if (previewEnd < end) sb.append(" ...")
+        if (previewEnd.toLong() < requestedEnd) sb.append(" ...")
         return sb.toString()
     }
 }
