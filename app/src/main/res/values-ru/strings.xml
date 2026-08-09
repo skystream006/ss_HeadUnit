@@ -802,7 +802,7 @@
     <string name="support_rules_intro">Нужно только два условия. Всё остальное необязательно, но поможет решить проблему гораздо быстрее.</string>
     <string name="support_rules_section_required">Обязательно</string>
     <string name="support_rules_section_recommend">Рекомендации (необязательно)</string>
-    <string name="rename_notice_title">Наше имя меняется на Open Headunit</string>
-    <string name="rename_notice_message">Headunit Revived растёт благодаря вам и превращается в нечто своё: Open Headunit. Новое имя мы вводим постепенно, в течение следующих обновлений, поэтому какое-то время в некоторых местах вы ещё можете видеть старое имя.\n\nТо же приложение, те же люди за ним, и все ваши настройки остаются ровно такими, как есть.</string>
+    <string name="rename_notice_title">Наше имя меняется на ssHeadUnit</string>
+    <string name="rename_notice_message">Headunit Revived растёт благодаря вам и превращается в нечто своё: ssHeadUnit. Новое имя мы вводим постепенно, в течение следующих обновлений, поэтому какое-то время в некоторых местах вы ещё можете видеть старое имя.\n\nТо же приложение, те же люди за ним, и все ваши настройки остаются ровно такими, как есть.</string>
     <string name="rename_notice_button">Понятно</string>
 </resources>
