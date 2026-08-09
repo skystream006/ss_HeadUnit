@@ -55,6 +55,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: debug-apk-latest
+          target_commitish: ${{ github.sha }}
           name: Latest Debug APK
           body: Automated latest github debug APK build.
           prerelease: true
