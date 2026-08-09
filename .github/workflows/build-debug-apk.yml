@@ -84,8 +84,8 @@ jobs:
             version_name="unknown"
             app_name="$apk_filename"
           else
-            app_name="${apk_filename%%$version_name*}"
-            app_name="${app_name%[-_]}"
+            version_pattern="${version_name//./\\.}"
+            app_name="$(echo "$apk_filename" | sed -E "s/[-_]?${version_pattern}.*$//")"
           fi
           app_name="${app_name:-app}"
           pr_number="${PR_NUMBER:-0}"
