@@ -674,6 +674,8 @@ class SettingsFragment : Fragment() {
 
         items.add(SettingItem.SettingEntry(
             stableId = "autoConnectSettings",
+            nameResId = R.string.auto_connect_settings,
+            value = getAutoConnectSummary(),
             onClick = {
                 try {
                     findNavController().navigate(R.id.action_settingsFragment_to_autoConnectFragment)
@@ -1612,11 +1614,6 @@ class SettingsFragment : Fragment() {
         is SettingItem.CategoryHeader -> getString(item.titleResId)
     }
 
-    /** The chosen connection types as a readable label. */
-    private fun connectionModesLabel(): String {
-        return getString(R.string.connection_kind_usb)
-    }
-
     private fun showResolutionDialog() {
         val (pw, ph) = realPanelResolution()
         val recommended = com.skystream.ssheadunit.utils.SystemOptimizer.recommendedResolution(pw, ph)
@@ -2066,7 +2063,6 @@ class SettingsFragment : Fragment() {
         )
     }
     private fun handleImportedSettings(snapshot: ImportSnapshot, result: SettingsBackupManager.ImportResult) {
-        settings = App.provide(requireContext()).settings
         settings = App.provide(requireContext()).settings
 
         if (SettingsBackupManager.requiresProjectionRestart(result.changedKeys) && App.provide(requireContext()).commManager.isConnected) {

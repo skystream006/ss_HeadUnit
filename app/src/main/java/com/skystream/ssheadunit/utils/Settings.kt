@@ -399,7 +399,6 @@ class Settings(private val context: Context) {
         get() {
             val stored = prefs.getStringSet("connection-modes", null)
             val usbOnly = when {
-                stored != null && stored.contains(ConnectionMode.USB.key) -> setOf(ConnectionMode.USB)
                 stored != null -> setOf(ConnectionMode.USB)
                 else -> migrateLegacyConnectionModes()
             }
