@@ -157,13 +157,28 @@ class AapTransport(
 
     private fun sendEncryptedMessage(data: ByteArray, length: Int): Int {
         val ba =
-            ssl.encrypt(AapMessage.HEADER_SIZE, length - AapMessage.HEADER_SIZE, data) ?: return -1
+            ssl.encrypt(AapMessage.HEADER_SIZE, length - AapMessage.HEADER_SIZE, data) ?: run {
+                AppLog.e("AapTransport: encrypt failed for outbound chan=%d %s flags=0x%02x len=%d preview=%s",
+                    data[0].toInt() and 0xFF,
+                    com.skystream.ssheadunit.aap.protocol.Channel.name(data[0].toInt() and 0xFF),
+                    data[1].toInt() and 0xFF, length,
+                    AapDiagnostics.hexPreview(data, 0, length))
+                return -1
+            }
 
         ba.data[0] = data[0]
         ba.data[1] = data[1]
         Utils.intToBytes(ba.limit - AapMessage.HEADER_SIZE, 2, ba.data)
 
         val size = connection?.sendBlocking(ba.data, ba.limit, 250) ?: -1
+
+        if (size != ba.limit) {
+            AppLog.e("AapTransport: sendBlocking wrote %d/%d for outbound chan=%d %s flags=0x%02x plainLen=%d encryptedPreview=%s",
+                size, ba.limit, data[0].toInt() and 0xFF,
+                com.skystream.ssheadunit.aap.protocol.Channel.name(data[0].toInt() and 0xFF),
+                data[1].toInt() and 0xFF, length,
+                AapDiagnostics.hexPreview(ba.data, 0, ba.limit))
+        }
 
         if (AppLog.LOG_VERBOSE) {
             AppLog.v("Sent size: %d", size)

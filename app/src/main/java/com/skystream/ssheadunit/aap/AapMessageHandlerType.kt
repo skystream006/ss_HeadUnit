@@ -30,7 +30,12 @@ internal class AapMessageHandlerType(
         // 1. Try processing as Video stream first (ID_VID)
         // High priority for the smoothest possible display.
         if (message.channel == Channel.ID_VID) {
-             if (aapVideo.process(message)) {
+             AppLog.i("AapMessageHandler: video message received type=0x%04x flags=0x%02x size=%d dataOffset=%d",
+                 msgType, flags.toInt() and 0xFF, message.size, message.dataOffset)
+             val processed = aapVideo.process(message)
+             AppLog.i("AapMessageHandler: video message processed=$processed type=0x%04x flags=0x%02x size=%d",
+                 msgType, flags.toInt() and 0xFF, message.size)
+             if (processed) {
                  // Send ACK AFTER processing
                  if (msgType == 0 || msgType == 1) {
                      transport.sendMediaAck(message.channel)

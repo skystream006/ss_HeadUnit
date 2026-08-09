@@ -32,6 +32,8 @@ internal class AapVideo(private val videoDecoder: VideoDecoder, private val sett
     private var isFrameCorrupt = false
     private var lastKeyframeRequestMs = 0L
     private var isAssemblingFrame = false
+    private var packetCount = 0
+    private var decodedFrameCount = 0
 
     /**
      * Marks the frame being assembled unusable and asks the phone for a fresh keyframe.
@@ -115,6 +117,12 @@ internal class AapVideo(private val videoDecoder: VideoDecoder, private val sett
         val flags = message.flags.toInt()
         val buf = message.data
         val len = message.size
+        packetCount++
+        if (packetCount <= 10 || AppLog.LOG_VERBOSE) {
+            AppLog.i("AapVideo: packet #%d flags=0x%02x type=0x%04x len=%d dataOffset=%d preview=%s",
+                packetCount, flags and 0xFF, message.type, len, message.dataOffset,
+                AapDiagnostics.hexPreview(buf, 0, len))
+        }
 
         when (flags) {
             11 -> {
@@ -126,6 +134,8 @@ internal class AapVideo(private val videoDecoder: VideoDecoder, private val sett
                 val sc10 = findStartCode(buf, 10)
                 if (len > 10 + sc10 && sc10 > 0) {
                     videoDecoder.decode(buf, 10, len - 10, settings.forceSoftwareDecoding, settings.videoCodec)
+                    decodedFrameCount++
+                    if (decodedFrameCount <= 5) AppLog.i("AapVideo: submitted single-frame packet offset=10 size=${len - 10}")
                     return true
                 }
 
@@ -133,9 +143,11 @@ internal class AapVideo(private val videoDecoder: VideoDecoder, private val sett
                 val sc2 = findStartCode(buf, 2)
                 if (len > 2 + sc2 && sc2 > 0) {
                     videoDecoder.decode(buf, 2, len - 2, settings.forceSoftwareDecoding, settings.videoCodec)
+                    decodedFrameCount++
+                    if (decodedFrameCount <= 5) AppLog.i("AapVideo: submitted single-frame packet offset=2 size=${len - 2}")
                     return true
                 }
-                AppLog.w("AapVideo: Dropped Flag 11 packet. len=$len")
+                AppLog.w("AapVideo: Dropped Flag 11 packet. len=$len sc10=$sc10 sc2=$sc2 preview=${AapDiagnostics.hexPreview(buf, 0, len)}")
             }
             9 -> {
                 // First fragment - reset corruption state for the new frame
@@ -193,6 +205,8 @@ internal class AapVideo(private val videoDecoder: VideoDecoder, private val sett
                 } else {
                     videoDecoder.decode(messageBuffer.array(), 0, assembledSize, settings.forceSoftwareDecoding, settings.videoCodec)
                 }
+                decodedFrameCount++
+                if (decodedFrameCount <= 5) AppLog.i("AapVideo: submitted assembled frame size=$assembledSize")
 
                 messageBuffer.clear()
                 return true
