@@ -525,8 +525,8 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // Activity window is fully initialized before we lock the orientation. Calling it before
         // super.onCreate() caused SCREEN_ORIENTATION_LOCKED to inherit the orientation context
         // from the launching task (e.g. MainActivity in portrait), resulting in the projection
-        // Activity locking to portrait on a landscape head unit when started via the Self Mode
-        // button in the app. With the long-press shortcut the bug was absent because the Activity
+        // Activity locking to portrait on a landscape head unit when started from the main app.
+        // With the long-press shortcut the bug was absent because the Activity
         // started without an existing task context. Moving this call after super.onCreate()
         // ensures the window manager has correctly resolved the display's physical orientation
         // before we lock it.
@@ -575,9 +575,9 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
                                 hideReconnectingOverlay()
                                 finish()
                             } else {
-                                // For unexpected disconnects (especially Wireless), show the reconnecting overlay immediately
-                                // and wait up to 20 seconds (or 8 seconds for USB) to see if the connection recovers.
-                                val timeoutMs = if (settings.lastConnectionType == Settings.CONNECTION_TYPE_USB) 8000L else 20000L
+                                // For unexpected disconnects, show the reconnecting overlay immediately
+                                // and wait to see if the USB connection recovers.
+                                val timeoutMs = 8000L
                                 AppLog.i("AapProjectionActivity: Unexpected disconnect. Showing reconnecting overlay and waiting up to ${timeoutMs / 1000}s for recovery.")
                                 showReconnectingOverlay()
 

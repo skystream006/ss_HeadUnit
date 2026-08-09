@@ -144,9 +144,7 @@ class OnboardingActivity : BaseActivity() {
     }
 
     /**
-     * A wizard step that does not apply to the chosen setup and is skipped entirely. The GPS source
-     * choice (this device vs the connected phone) makes no sense in Self Mode, where there is no
-     * separate phone, so it is hidden there.
+     * A wizard step that does not apply to the chosen setup and is skipped entirely.
      */
     private fun isStepHidden(s: Int): Boolean =
         s == STEP_GPS && !settings.showsExternalGps()
@@ -185,7 +183,7 @@ class OnboardingActivity : BaseActivity() {
 
     private fun updateStepperDots() {
         val steps = visibleSteps()
-        // Rebuild if the visible-step count changed (e.g. Self Mode just hid the GPS step).
+        // Rebuild if the visible-step count changed.
         if (stepper.childCount != steps.size) buildStepperDots()
         val density = resources.displayMetrics.density
         val active = resolveAttrColor(com.google.android.material.R.attr.colorPrimary)

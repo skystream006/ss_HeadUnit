@@ -2,7 +2,6 @@ package com.skystream.ssheadunit.aap
 
 import android.content.Context
 import com.skystream.ssheadunit.connection.AccessoryConnection
-import com.skystream.ssheadunit.connection.SocketAccessoryConnection
 import com.skystream.ssheadunit.decoder.MicRecorder
 import com.skystream.ssheadunit.utils.AppLog
 import com.skystream.ssheadunit.aap.protocol.proto.MediaPlayback
@@ -51,17 +50,7 @@ internal interface AapRead {
                 onAaPlaybackStatus
             )
 
-            // Read framing is a transport-shape question, not a handshake-timing one:
-            // every socket-backed connection (Nearby, WiFi Direct, Hotspot, manual IP) frames
-            // one AA message per blocking read, same as it always has. Only USB/libusb bulk
-            // transfers can batch multiple messages into one read and need the FIFO reassembly
-            // in AapReadMultipleMessages. Do NOT key this off isSingleMessage - that flag only
-            // controls the Nearby-specific handshake settle-delay/drain skip in
-            // AapTransport.handshake() and is unrelated to read framing.
-            return if (connection is SocketAccessoryConnection)
-                AapReadSingleMessage(connection, transport.ssl, handler)
-            else
-                AapReadMultipleMessages(connection, transport.ssl, handler)
+            return AapReadMultipleMessages(connection, transport.ssl, handler)
         }
     }
 }

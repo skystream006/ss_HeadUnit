@@ -195,8 +195,7 @@ object BluetoothHelper {
     /**
      * Evidence that this head unit's Bluetooth is an external module on a serial link rather than
      * the radio behind `android.bluetooth`, or null when it is a normal built-in radio. See
-     * [ExternalBtPolicy] for what the evidence means and why it decides whether Bluetooth-based
-     * wireless can work here at all.
+     * [ExternalBtPolicy] for what the evidence means and why it matters for Bluetooth features.
      *
      * Cached: the answer is a property of the hardware and cannot change within a process, and
      * this is consulted on every handshake start.

@@ -70,15 +70,15 @@
     <string name="perm_mic_title">Microphone</string>
     <string name="perm_mic_help">Lets Android Auto use voice commands, the Google Assistant and phone calls.</string>
     <string name="perm_location_title">Location</string>
-    <string name="perm_location_help">Sends GPS to the phone for navigation, scans for wireless connections and drives location based night mode.</string>
+    <string name="perm_location_help">Sends GPS to the phone for navigation and drives location based night mode.</string>
     <string name="perm_nearby_title">Nearby devices</string>
-    <string name="perm_nearby_help">Needed to connect over Bluetooth and Wi-Fi, route Bluetooth audio and auto start on a paired device.</string>
+    <string name="perm_nearby_help">Needed to work with paired Bluetooth devices, route Bluetooth audio and auto start on a paired device.</string>
     <string name="perm_notifications_title">Notifications</string>
     <string name="perm_notifications_help">Shows the ongoing notification while Android Auto is running.</string>
     <string name="perm_overlay_title">Display over other apps</string>
     <string name="perm_overlay_help">Lets the app open the car screen on top of other apps, including auto start.</string>
     <string name="perm_write_settings_title">Modify system settings</string>
-    <string name="perm_write_settings_help">Lets the app turn the hotspot on automatically for wireless connections.</string>
+    <string name="perm_write_settings_help">Lets the app adjust compatible system display settings when supported by your device.</string>
     <string name="perm_storage_title">Storage</string>
     <string name="perm_storage_help">Needed to back up and restore your settings and to pick a custom loading image.</string>
 
@@ -86,7 +86,7 @@
     <string name="onb_vehicle_title">Your car</string>
     <string name="onb_vehicle_input_hint">Brand or name</string>
     <string name="onb_vehicle_help_aa">This name is sent to Android Auto. It shows in your phone\'s connection history and on the Android Auto welcome screen.</string>
-    <string name="onb_vehicle_help_advanced">You can fine-tune your vehicle details in the Advanced tab. We do not use this data; it is only sent to Android Auto because it requires it.</string>
+    <string name="onb_vehicle_help_advanced">You can fine-tune your vehicle details in Settings. We do not use this data; it is only sent to Android Auto because it requires it.</string>
     <string-array name="vehicle_brands">
         <item>Google</item>
         <item>Android</item>
@@ -116,7 +116,7 @@
     <!-- Onboarding wizard (round 2) -->
     <string name="onb_language_help">Choose the app language.</string>
     <string name="connection_kind_usb">USB</string>
-    <string name="onb_connection_usb_detail">Phone connected by USB, either a direct cable or a USB wireless adapter.</string>
+    <string name="onb_connection_usb_detail">Phone connected by USB cable.</string>
     <string name="onb_conn_usb_label">USB (or adapter)</string>
     <string name="onb_connection_self_detail">Self Mode runs Android Auto on this device without connecting a phone.</string>
     <string name="connection_kind_all">All</string>
@@ -498,11 +498,11 @@
     <string name="support_rules_device_title">Say what runs the app</string>
     <string name="support_rules_device_desc">The Android version of the device projecting Android Auto (your head unit or screen), and its brand and model if you know them.</string>
     <string name="support_rules_connection_title">Say how you connect</string>
-    <string name="support_rules_connection_desc">USB cable, USB wireless adapter, WiFi Direct, WiFi (headunit server) or Self Mode. If it is wireless, add the adapter or dongle model.</string>
+    <string name="support_rules_connection_desc">Describe the USB cable, phone, Android Auto version, head unit model, and the exact steps needed to reproduce the issue.</string>
     <string name="support_rules_appversion_title">Include the app version</string>
     <string name="support_rules_appversion_desc">The ssHeadUnit version, shown on the About screen.</string>
     <string name="support_rules_logs_title">Attach logs, right after it happens</string>
-    <string name="support_rules_logs_desc">Switch Settings to the Advanced tab, turn on Debug Mode in the Debug section, reproduce the problem, then tap Export Logs right after so the log covers the moment it broke and not just the start. Attach that file to your issue.</string>
+    <string name="support_rules_logs_desc">Open Settings, turn on Debug Mode in the Debug section, reproduce the problem, then tap Export Logs right after so the log covers the moment it broke and not just the start. Attach that file to your issue.</string>
     <string name="support_rules_search_title">No duplicates</string>
     <string name="support_rules_search_desc">First search the existing issues. If an open issue already describes your problem, add your details as a comment there instead of opening a new one. Only open a new issue if none matches.</string>
     <string name="support_rules_phone_title">Your phone matters too</string>
@@ -597,7 +597,7 @@
     <string name="connection_interrupted">Connection lost</string>
     <string name="connection_interrupted_detail">Retrying…</string>
     <string name="renderer_fallback_surface">The video kept freezing, so the display was switched to SurfaceView for this session. If it is stable, set View mode to SurfaceView in Settings.</string>
-    <string name="wifi_disconnect_toast">Android Auto disconnected: If using wireless AA, disable \"Switch between networks\" or \"Network acceleration\" in phone WiFi settings</string>
+    <string name="wifi_disconnect_toast">Android Auto disconnected unexpectedly. Check the USB cable, dongle and phone connection, then try again.</string>
     <string name="reset_usb_option">Reset USB Connection</string>
     <string name="reset_usb_timeout">USB device not found. Please check connection.</string>
     <string name="notification_service_running">ssHeadUnit is running</string>

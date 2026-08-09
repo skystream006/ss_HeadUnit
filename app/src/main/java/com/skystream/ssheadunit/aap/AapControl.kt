@@ -114,15 +114,15 @@ internal class AapControlMedia(
                         aapTransport.settings.forceSoftwareDecoding &&
                         aapTransport.settings.softwareVideoDecoder == Settings.SoftwareVideoDecoder.BUNDLED_FFMPEG
             if (softwareHevc) {
-                // Keep the phone closer to decoder pace. A large wireless window lets video
+                // Keep the phone closer to decoder pace. A large buffering window lets video
                 // backlog turn into visible input lag when 2K HEVC is decoded in software.
-                return if (aapTransport.isWireless) 6 else 8
+                return 8
             }
-            return if (aapTransport.isWireless) 12 else 16
+            return 16
         }
 
-        // Audio still benefits from a wider jitter window, especially on wireless.
-        return if (aapTransport.isWireless) 30 else 16
+        // Audio still benefits from a wider jitter window for jitter tolerance.
+        return 16
     }
 
     private fun mediaSinkStopRequest(channel: Int): Int {

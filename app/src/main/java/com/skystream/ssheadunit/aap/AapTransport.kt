@@ -19,7 +19,6 @@ import com.skystream.ssheadunit.aap.protocol.messages.ScrollWheelEvent
 import com.skystream.ssheadunit.aap.protocol.messages.SensorEvent
 import com.skystream.ssheadunit.utils.LegacyOptimizer
 import com.skystream.ssheadunit.connection.AccessoryConnection
-import com.skystream.ssheadunit.connection.SocketAccessoryConnection
 import com.skystream.ssheadunit.contract.ProjectionActivityRequest
 import com.skystream.ssheadunit.decoder.AudioDecoder
 import com.skystream.ssheadunit.decoder.MicRecorder
@@ -84,8 +83,6 @@ class AapTransport(
     private var aapRead: AapRead? = null
     var isQuittingAllowed: Boolean = false
 
-    val isWireless: Boolean
-        get() = connection is com.skystream.ssheadunit.connection.SocketAccessoryConnection
     var ignoreNextStopRequest: Boolean = false
     /** Set by [AapControl] when VIDEO_FOCUS_NATIVE triggers a stop (user tapped Exit). */
     @Volatile var wasUserExit: Boolean = false
@@ -290,8 +287,8 @@ class AapTransport(
 
     private fun handshake(connection: AccessoryConnection): Boolean {
         try {
-            val isUsb = connection !is SocketAccessoryConnection && !connection.isSingleMessage
-            // Increased delay for AA 16.4+ stability on USB - skip for Sockets
+            val isUsb = !connection.isSingleMessage
+            // Increased delay for AA 16.4+ stability on USB.
             if (isUsb) {
                 SystemClock.sleep(500)
             }

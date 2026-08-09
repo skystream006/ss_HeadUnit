@@ -21,7 +21,6 @@ import android.os.SystemClock
 import com.skystream.ssheadunit.aap.AapMessage
 import com.skystream.ssheadunit.aap.protocol.messages.SensorEvent
 import com.skystream.ssheadunit.aap.protocol.proto.MediaPlayback
-import java.net.Socket
 import android.view.KeyEvent
 import com.skystream.ssheadunit.aap.protocol.messages.TouchEvent
 import com.skystream.ssheadunit.aap.protocol.proto.Input
@@ -208,70 +207,6 @@ class CommManager(
 
             if (_connection?.connect() ?: false) {
                 settings.saveLastConnection(type = Settings.CONNECTION_TYPE_USB, usbDevice = UsbDeviceCompat.getUniqueName(device))
-                _connectionState.emit(ConnectionState.Connected)
-            } else {
-                _connectionState.emit(ConnectionState.Disconnected())
-            }
-        } catch (e: Exception) {
-            _connectionState.emit(ConnectionState.Error("Connection failed: ${e.message}"))
-            disconnect()
-        }
-    }
-
-    /**
-     * Wraps an already-connected [Socket] (e.g. accepted by `WirelessServer`) in a
-     * [SocketAccessoryConnection] and advances to [ConnectionState.Connected].
-     *
-     * The socket must already be connected; this overload skips the TCP handshake and only
-     * sets up the AAP framing layer.
-     */
-    suspend fun connect(socket: Socket) = withContext(Dispatchers.IO) {
-        // Another caller already started the connection — do nothing.
-        if (_connectionState.value is ConnectionState.Connecting)
-            return@withContext
-
-
-        _disconnectJob?.join()
-
-        try {
-            _connectionState.emit(ConnectionState.Connecting)
-            _connection?.disconnect()
-            _connection = SocketAccessoryConnection(socket, context)
-
-            if (_connection?.connect() ?: false) {
-                // [FIX] Don't overwrite NEARBY connection type with WIFI + localhost IP (::1)
-                if (socket !is NearbySocket) {
-                    settings.saveLastConnection(type = Settings.CONNECTION_TYPE_WIFI, ip = socket.inetAddress?.hostAddress ?: "")
-                }
-                _connectionState.emit(ConnectionState.Connected)
-            } else {
-                _connectionState.emit(ConnectionState.Disconnected())
-            }
-        } catch (e: Exception) {
-            _connectionState.emit(ConnectionState.Error("Connection failed: ${e.message}"))
-            disconnect()
-        }
-    }
-
-    /**
-     * Opens a TCP connection to [ip]:[port] and advances to [ConnectionState.Connected].
-     *
-     * Used by the manual IP entry flow and the NSD-discovered device list.
-     */
-    suspend fun connect(ip: String, port: Int) = withContext(Dispatchers.IO) {
-        // Another caller already started the connection — do nothing.
-        if (_connectionState.value is ConnectionState.Connecting)
-            return@withContext
-
-        _disconnectJob?.join()
-
-        try {
-            _connectionState.emit(ConnectionState.Connecting)
-            _connection?.disconnect()
-            _connection = SocketAccessoryConnection(ip, port, context)
-
-            if (_connection?.connect() ?: false) {
-                settings.saveLastConnection(type = Settings.CONNECTION_TYPE_WIFI, ip = ip)
                 _connectionState.emit(ConnectionState.Connected)
             } else {
                 _connectionState.emit(ConnectionState.Disconnected())

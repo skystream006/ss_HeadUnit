@@ -712,7 +712,7 @@ class SettingsFragment : Fragment() {
         items.add(SettingItem.CategoryHeader("navigation", R.string.category_navigation))
 
         // The GPS source choice (this device vs the connected phone) only applies when a phone is
-        // connected. With Self Mode as the only connection there is no phone, so hide it.
+        // connected.
         if (settings.showsExternalGps()) {
             items.add(SettingItem.ToggleSettingEntry(
                 stableId = "gpsNavigation",
@@ -1575,9 +1575,7 @@ class SettingsFragment : Fragment() {
         // The bottom Save action is always relevant when present.
         if (item is SettingItem.ActionButton && item.stableId == "bottomSaveButton") return true
 
-        // Connection-type filter: hide settings that do not apply to the chosen connection,
-        // in BOTH tabs and in search. USB hides WiFi settings, WiFi hides USB settings,
-        // Self Mode hides both, All/unset show everything.
+        // Connection-type filter: hide settings that do not apply to the chosen connection.
         if (isHiddenByConnection(item, categoryId)) return false
 
         if (query.isNotEmpty()) {
