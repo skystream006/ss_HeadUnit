@@ -233,13 +233,13 @@ object AppLog {
             Log.ASSERT -> "A"
             else -> priority.toString()
         }
-        val ts = synchronized(memoryBufferLock) { memoryBufferDateFormat.format(java.util.Date()) }
-        val line = "$ts $level $msg"
-        synchronized(memoryBufferLock) {
-            memoryBuffer.addLast(line)
+        val line = synchronized(memoryBufferLock) {
+            val entry = "${memoryBufferDateFormat.format(java.util.Date())} $level $msg"
+            memoryBuffer.addLast(entry)
             while (memoryBuffer.size > MEMORY_BUFFER_MAX_LINES) {
                 memoryBuffer.removeFirst()
             }
+            entry
         }
         memoryBufferListener?.invoke(line)
     }
