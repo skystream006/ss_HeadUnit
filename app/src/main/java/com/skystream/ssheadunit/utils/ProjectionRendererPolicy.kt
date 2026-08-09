@@ -5,7 +5,6 @@ import java.util.Locale
 
 object ProjectionRendererPolicy {
     private val legacyRockchipSocIds = setOf("rk3066", "rk3188", "rk3288", "rk3368")
-    private val legacyRockchipHardwareIds = legacyRockchipSocIds
     // Some Rockchip Android builds expose a board family rather than the SoC in Build.BOARD.
     private val legacyRockchipBoardIds = legacyRockchipSocIds + "rk30sdk"
 
@@ -27,7 +26,7 @@ object ProjectionRendererPolicy {
     }
 
     private fun isLegacyRockchip(hardware: String?, board: String?): Boolean {
-        return matchesAny(hardware, legacyRockchipHardwareIds) ||
+        return matchesAny(hardware, legacyRockchipSocIds) ||
             matchesAny(board, legacyRockchipBoardIds)
     }
 
