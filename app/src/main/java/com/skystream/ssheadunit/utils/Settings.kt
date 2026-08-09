@@ -189,7 +189,7 @@ class Settings(private val context: Context) {
         get() {
             val defaultViewMode = ProjectionRendererPolicy.defaultViewModeForCurrentDevice()
             val value = prefs.getInt("view-mode", defaultViewMode.value)
-            return ViewMode.fromInt(value)!!
+            return ViewMode.fromInt(value) ?: defaultViewMode
         }
         set(viewMode) {
             prefs.edit().putInt("view-mode", viewMode.value).apply()

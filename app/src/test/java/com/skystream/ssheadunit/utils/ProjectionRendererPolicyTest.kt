@@ -27,6 +27,17 @@ class ProjectionRendererPolicyTest {
     }
 
     @Test
+    fun `legacy Rockchip board family defaults to SurfaceView`() {
+        assertEquals(
+            Settings.ViewMode.SURFACE,
+            ProjectionRendererPolicy.defaultViewMode(
+                hardware = "unknown",
+                board = "rk30sdk"
+            )
+        )
+    }
+
+    @Test
     fun `unknown devices keep TextureView default`() {
         assertEquals(
             Settings.ViewMode.TEXTURE,
