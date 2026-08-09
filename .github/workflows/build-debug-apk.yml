@@ -51,6 +51,13 @@ jobs:
           fi
           echo "path=$apk_path" >> "$GITHUB_OUTPUT"
 
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-github-debug-apk
+          path: ${{ steps.apk.outputs.path }}
+          if-no-files-found: error
+
       - name: Publish debug APK release asset
         uses: softprops/action-gh-release@v2
         with:
