@@ -62,7 +62,9 @@ jobs:
             echo "No APK found" >&2
             exit 1
           fi
-          echo "path=$apk_path" >> "$GITHUB_OUTPUT"
+          publish_path="app/build/outputs/apk/github/debug/ssheadunit-github-debug.apk"
+          cp "$apk_path" "$publish_path"
+          echo "path=$publish_path" >> "$GITHUB_OUTPUT"
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
