@@ -517,9 +517,20 @@ class CommManager(
         }
     }
 
-    /** Sends a raw [AapMessage] (e.g. touch event, video focus request) to the phone. */
+    /**
+     * Sends a raw [AapMessage] (e.g. touch event, video focus request) to the phone.
+     *
+     * Allowed from [ConnectionState.HandshakeComplete] onward: [AapTransport.startHandshake]
+     * already spins up the send thread/handler before emitting that state, so the transport can
+     * write bytes before [startReading] (and thus [ConnectionState.TransportStarted]) is reached.
+     * This matters for the video watchdog's unsolicited keyframe requests in
+     * [com.skystream.ssheadunit.aap.AapProjectionActivity], which start firing 1s after
+     * HandshakeComplete: gating on TransportStarted alone silently dropped those early requests
+     * whenever the projection surface (and therefore startReading()) wasn't ready yet.
+     */
     fun send(message: AapMessage) {
-        if (_connectionState.value is ConnectionState.TransportStarted) {
+        if (_connectionState.value is ConnectionState.HandshakeComplete ||
+            _connectionState.value is ConnectionState.TransportStarted) {
             _transport?.send(message)
         }
     }
