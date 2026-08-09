@@ -16,7 +16,7 @@ class ProjectionRendererPolicyTest {
     }
 
     @Test
-    fun `legacy Rockchip defaults to SurfaceView`() {
+    fun `rk3288 hardware with rk3288 box board defaults to SurfaceView`() {
         assertEquals(
             Settings.ViewMode.SURFACE,
             ProjectionRendererPolicy.defaultViewMode(
