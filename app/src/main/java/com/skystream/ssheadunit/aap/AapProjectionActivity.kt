@@ -142,8 +142,12 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
     }
     private val reconnectingWatchdog = object : Runnable {
         override fun run() {
-            // Only run watchdog if we are actually supposed to be connected
-            if (commManager.connectionState.value !is CommManager.ConnectionState.HandshakeComplete) {
+            // Only run watchdog if we are actually supposed to be connected and streaming.
+            // TransportStarted is the state real video/audio flows in - HandshakeComplete is the
+            // brief pre-streaming window before startReading() is called, where lastFrameRenderedMs
+            // can never be non-zero. Gating on HandshakeComplete here meant this watchdog's stall/
+            // freeze/renderer-fallback recovery (issues #650, #767) never ran during actual playback.
+            if (commManager.connectionState.value !is CommManager.ConnectionState.TransportStarted) {
                 return
             }
             val lastFrame = videoDecoder.lastFrameRenderedMs
