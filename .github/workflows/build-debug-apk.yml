@@ -79,16 +79,19 @@ jobs:
             exit 1
           fi
           apk_filename="$(basename "$apk_path" .apk)"
-          version_name=""
-          app_name=""
-          IFS='-_' read -r -a name_parts <<< "$apk_filename"
-          for part in "${name_parts[@]}"; do
-            if echo "$part" | grep -Eq '^[0-9]+(\.[0-9]+){0,3}$'; then
-              version_name="$part"
-              break
-            fi
-            app_name="${app_name:+${app_name}-}${part}"
-          done
+          parse_output="$(APK_FILENAME="$apk_filename" python - <<'PY'
+          import os
+          import re
+
+          name = os.environ["APK_FILENAME"]
+          match = re.match(r'^(.*?)[-_]([0-9]+(?:\.[0-9]+){1,3})(?:[-_].*)?$', name)
+          if match:
+              print(match.group(1))
+              print(match.group(2))
+          PY
+          )"
+          app_name="$(echo "$parse_output" | sed -n '1p')"
+          version_name="$(echo "$parse_output" | sed -n '2p')"
           if [ -z "$version_name" ]; then
             version_name="unknown"
             echo "Warning: Unable to extract version from APK filename '$apk_filename'; using fallback." >&2
