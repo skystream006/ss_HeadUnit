@@ -32,6 +32,8 @@ object ProjectionRendererPolicy {
 
     private fun matchesAny(value: String?, ids: Set<String>): Boolean {
         val field = value.orEmpty().lowercase(Locale.ROOT)
+        // Match exact IDs and delimiter-suffixed variants only; avoid broad prefix matching that
+        // could classify unrelated future boards as legacy Rockchip.
         return ids.any { id -> field == id || field.startsWith("${id}_") || field.startsWith("${id}-") }
     }
 }
