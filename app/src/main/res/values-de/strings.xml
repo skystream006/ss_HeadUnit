@@ -781,7 +781,7 @@
     <string name="onb_ready_loading_button">Ladebildschirm einrichten</string>
     <string name="static_bssid_title">Statische BSSID</string>
     <string name="static_bssid_enter_value">BSSID-Wert (Format: XX:XX:XX:XX:XX:XX)</string>
-    <string name="rename_notice_title">Unser Name wird zu Open Headunit</string>
-    <string name="rename_notice_message">Headunit Revived wächst, dank euch, und wird zu etwas Eigenem: Open Headunit. Wir führen den neuen Namen über die nächsten Updates hinweg ein, daher siehst du an manchen Stellen vielleicht noch eine Weile den alten Namen.\n\nGleiche App, dieselben Leute dahinter, und all deine Einstellungen bleiben genau so, wie sie sind.</string>
+    <string name="rename_notice_title">Unser Name wird zu ssHeadUnit</string>
+    <string name="rename_notice_message">Headunit Revived wächst, dank euch, und wird zu etwas Eigenem: ssHeadUnit. Wir führen den neuen Namen über die nächsten Updates hinweg ein, daher siehst du an manchen Stellen vielleicht noch eine Weile den alten Namen.\n\nGleiche App, dieselben Leute dahinter, und all deine Einstellungen bleiben genau so, wie sie sind.</string>
     <string name="rename_notice_button">Verstanden</string>
 </resources>
