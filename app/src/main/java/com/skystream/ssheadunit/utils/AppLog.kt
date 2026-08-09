@@ -71,6 +71,26 @@ object AppLog {
         }
     }
 
+    /** Maximum number of lines kept in the in-memory buffer used by the on-screen debug log. */
+    const val MEMORY_BUFFER_MAX_LINES = 500
+
+    private val memoryBuffer = ArrayDeque<String>()
+    private val memoryBufferLock = Any()
+    private val memoryBufferDateFormat = java.text.SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+
+    /**
+     * Only records into [memoryBuffer] while enabled, so the buffer costs nothing
+     * for users who never show the on-screen debug log.
+     */
+    @Volatile
+    var memoryBufferEnabled: Boolean = false
+        set(value) {
+            field = value
+            if (!value) clearMemoryBuffer()
+        }
+
+    @Volatile private var memoryBufferListener: ((String) -> Unit)? = null
+
     private var settings: Settings? = null
     @Volatile private var appLogFileLogger: Logger.File? = null
     @Volatile private var lastAppLogFile: IoFile? = null
@@ -78,6 +98,7 @@ object AppLog {
 
     fun init(settings: Settings?, context: Context? = null) {
         this.settings = settings
+        memoryBufferEnabled = settings?.showConnectionDebugLog == true
 
         val desiredSource = settings?.logSource ?: Settings.LogSource.LOGCAT
         val captureEnabled = settings?.exporterCaptureEnabled == true
@@ -181,6 +202,46 @@ object AppLog {
 
     private fun log(priority: Int, msg: String) {
         LOGGER.println(priority, TAG, msg)
+        recordInMemory(priority, msg)
+    }
+
+    /** Snapshot of the in-memory buffer, oldest line first. */
+    fun memoryBufferSnapshot(): List<String> = synchronized(memoryBufferLock) { memoryBuffer.toList() }
+
+    /** Drops every line currently held in the in-memory buffer. */
+    fun clearMemoryBuffer() {
+        synchronized(memoryBufferLock) { memoryBuffer.clear() }
+    }
+
+    /**
+     * Registers a listener that receives every new line while [memoryBufferEnabled] is set.
+     * Only one listener is supported; pass null to detach. The listener is invoked on the
+     * logging thread, so callers must marshal to their own thread if needed.
+     */
+    fun setMemoryBufferListener(listener: ((String) -> Unit)?) {
+        memoryBufferListener = listener
+    }
+
+    private fun recordInMemory(priority: Int, msg: String) {
+        if (!memoryBufferEnabled) return
+        val level = when (priority) {
+            Log.VERBOSE -> "V"
+            Log.DEBUG -> "D"
+            Log.INFO -> "I"
+            Log.WARN -> "W"
+            Log.ERROR -> "E"
+            Log.ASSERT -> "A"
+            else -> priority.toString()
+        }
+        val ts = synchronized(memoryBufferLock) { memoryBufferDateFormat.format(java.util.Date()) }
+        val line = "$ts $level $msg"
+        synchronized(memoryBufferLock) {
+            memoryBuffer.addLast(line)
+            while (memoryBuffer.size > MEMORY_BUFFER_MAX_LINES) {
+                memoryBuffer.removeFirst()
+            }
+        }
+        memoryBufferListener?.invoke(line)
     }
 
     private fun isLoggable(priority: Int): Boolean = priority >= LOG_LEVEL
@@ -188,6 +249,7 @@ object AppLog {
     private fun loge(message: String, tr: Throwable?) {
         val trace = if (LOGGER is Logger.Android) Log.getStackTraceString(tr) else ""
         LOGGER.println(Log.ERROR, TAG, message + '\n' + trace)
+        recordInMemory(Log.ERROR, message)
     }
 
     private fun closeAppLogFileLogger() {
