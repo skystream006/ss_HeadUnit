@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.andrerinas.openheadunit.main.HomeFragment"
+        android:name="com.skystream.ssheadunit.main.HomeFragment"
         android:label="@string/app_name">
         <action
             android:id="@+id/action_homeFragment_to_usbListFragment"
@@ -26,7 +26,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.andrerinas.openheadunit.main.SettingsFragment"
+        android:name="com.skystream.ssheadunit.main.SettingsFragment"
         android:label="@string/settings">
         <action
             android:id="@+id/action_settingsFragment_to_keymapFragment"
@@ -112,37 +112,37 @@
 
     <fragment
         android:id="@+id/keymapFragment"
-        android:name="com.andrerinas.openheadunit.main.KeymapFragment"
+        android:name="com.skystream.ssheadunit.main.KeymapFragment"
         android:label="@string/keymap" />
 
     <fragment
         android:id="@+id/permissionsFragment"
-        android:name="com.andrerinas.openheadunit.main.PermissionsFragment"
+        android:name="com.skystream.ssheadunit.main.PermissionsFragment"
         android:label="@string/permissions" />
 
     <fragment
         android:id="@+id/aboutFragment"
-        android:name="com.andrerinas.openheadunit.main.AboutFragment"
+        android:name="com.skystream.ssheadunit.main.AboutFragment"
         android:label="@string/about" />
 
     <fragment
         android:id="@+id/supportFragment"
-        android:name="com.andrerinas.openheadunit.main.SupportFragment"
+        android:name="com.skystream.ssheadunit.main.SupportFragment"
         android:label="@string/support" />
 
     <fragment
         android:id="@+id/autoConnectFragment"
-        android:name="com.andrerinas.openheadunit.main.AutoConnectFragment"
+        android:name="com.skystream.ssheadunit.main.AutoConnectFragment"
         android:label="@string/auto_connect_settings" />
 
     <fragment
         android:id="@+id/dpiSettingsFragment"
-        android:name="com.andrerinas.openheadunit.main.DpiSettingsFragment"
+        android:name="com.skystream.ssheadunit.main.DpiSettingsFragment"
         android:label="@string/dpi" />
 
     <fragment
         android:id="@+id/darkModeFragment"
-        android:name="com.andrerinas.openheadunit.main.DarkModeFragment"
+        android:name="com.skystream.ssheadunit.main.DarkModeFragment"
         android:label="@string/dark_mode_settings">
         <action
             android:id="@+id/action_darkModeFragment_to_locationsFragment"
@@ -162,7 +162,7 @@
 
     <fragment
         android:id="@+id/locationsFragment"
-        android:name="com.andrerinas.openheadunit.main.LocationsFragment"
+        android:name="com.skystream.ssheadunit.main.LocationsFragment"
         android:label="@string/geofence_locations_title">
         <action
             android:id="@+id/action_locationsFragment_to_mapPickerFragment"
@@ -175,7 +175,7 @@
 
     <fragment
         android:id="@+id/mapPickerFragment"
-        android:name="com.andrerinas.openheadunit.main.MapPickerFragment"
+        android:name="com.skystream.ssheadunit.main.MapPickerFragment"
         android:label="@string/geofence_pick_location">
         <argument
             android:name="mode"
@@ -190,32 +190,32 @@
 
     <fragment
         android:id="@+id/autoStartFragment"
-        android:name="com.andrerinas.openheadunit.main.AutoStartFragment"
+        android:name="com.skystream.ssheadunit.main.AutoStartFragment"
         android:label="@string/auto_start_settings" />
 
     <fragment
         android:id="@+id/vehicleInfoFragment"
-        android:name="com.andrerinas.openheadunit.main.VehicleInfoFragment"
+        android:name="com.skystream.ssheadunit.main.VehicleInfoFragment"
         android:label="@string/vehicle_info_settings" />
 
     <fragment
         android:id="@+id/loadingScreenFragment"
-        android:name="com.andrerinas.openheadunit.main.LoadingScreenFragment"
+        android:name="com.skystream.ssheadunit.main.LoadingScreenFragment"
         android:label="@string/loading_screen" />
 
     <fragment
         android:id="@+id/usbListFragment"
-        android:name="com.andrerinas.openheadunit.main.UsbListFragment"
+        android:name="com.skystream.ssheadunit.main.UsbListFragment"
         android:label="@string/usb" />
 
     <fragment
         android:id="@+id/networkListFragment"
-        android:name="com.andrerinas.openheadunit.main.NetworkListFragment"
+        android:name="com.skystream.ssheadunit.main.NetworkListFragment"
         android:label="@string/wifi" />
 
     <fragment
         android:id="@+id/micSettingsFragment"
-        android:name="com.andrerinas.openheadunit.main.MicSettingsFragment"
+        android:name="com.skystream.ssheadunit.main.MicSettingsFragment"
         android:label="@string/microphone_settings" />
 
 </navigation>

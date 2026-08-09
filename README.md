@@ -3,8 +3,8 @@
 ssHeadUnit is a copy of [Open Headunit](https://github.com/andreknieriem/open-headunit) by André Knieriem,
 renamed for this repository. It keeps the upstream GPLv3 license and all original copyright notices.
 
-<a href='https://play.google.com/store/apps/details?id=com.andrerinas.headunitrevived'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="200"/></a>
-<a href='http://www.amazon.com/gp/mas/dl/android?p=com.andrerinas.headunitrevived'><img alt='Available at Amazon Appstore' src='https://images-na.ssl-images-amazon.com/images/G/01/mobile-apps/devportal2/res/images/amazon-appstore-badge-english-black.png' width="200"/></a>
+<a href='https://play.google.com/store/apps/details?id=com.skystream.ssheadunit'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width="200"/></a>
+<a href='http://www.amazon.com/gp/mas/dl/android?p=com.skystream.ssheadunit'><img alt='Available at Amazon Appstore' src='https://images-na.ssl-images-amazon.com/images/G/01/mobile-apps/devportal2/res/images/amazon-appstore-badge-english-black.png' width="200"/></a>
 
 <p align="center">
     <img src="https://github.com/user-attachments/assets/579b7b03-23e0-4eda-a05d-c51d28a72113"
@@ -12,7 +12,7 @@ renamed for this repository. It keeps the upstream GPLv3 license and all origina
     height="200">
 </p>
 
-Open Headunit is an Android app that allows you to turn your Android tablet or phone into an Android Auto receiver. This project is a revived version of the original headunit project by the great Michael Reid. The original project can be found here:
+ssHeadUnit is an Android app that allows you to turn your Android tablet or phone into an Android Auto receiver. This project is a revived version of the original headunit project by the great Michael Reid. The original project can be found here:
 https://github.com/mikereidis/headunit
 
 ## NOTE!
@@ -28,10 +28,10 @@ We hope, that Google will take back these changes in the next Android Auto updat
 **Check out the [Wiki](https://github.com/andreknieriem/open-headunit/wiki) for detailed documentation, setup guides and troubleshooting!**
 
 ### Wired USB Connection
-- Connect your Android device (phone) to the tablet running Open Headunit via USB cable.
+- Connect your Android device (phone) to the tablet running ssHeadUnit via USB cable.
 - Make sure that Android Auto is installed on your phone.
 - Set your phone to Host-Mode if nescessary and select Android Auto
-- Click the USB Button in Open Headunit, find your phone and click the right button to allow connection
+- Click the USB Button in ssHeadUnit, find your phone and click the right button to allow connection
 - Click on your phone in the list and wait for Android Auto to start
 
 ### Wireless Helper (Recommended)
@@ -41,7 +41,7 @@ This is the most reliable way to connect wirelessly. It uses our companion app o
 - **Features:** Minimal configuration, supports NSD, Wi-Fi Direct Auto-Connect, and Bluetooth Auto-Start.
 
 **Setup:**
-- In Open Headunit Settings: Set **Wireless Mode** to **Helper Mode**.
+- In ssHeadUnit Settings: Set **Wireless Mode** to **Helper Mode**.
 - Ensure both devices are in the same network (Hotspot or WiFi).
 - Open the Wireless Helper app on your phone and start the service.
 - The helper will find your headunit and initiate the connection automatically.

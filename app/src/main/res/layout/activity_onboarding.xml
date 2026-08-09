@@ -285,7 +285,7 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/onb_dpi_help"
                     android:textAppearance="?attr/textAppearanceBody2" />
-                <com.andrerinas.openheadunit.view.DpiPickerView
+                <com.skystream.ssheadunit.view.DpiPickerView
                     android:id="@+id/onb_dpi_picker"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
