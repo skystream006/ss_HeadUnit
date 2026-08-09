@@ -38,6 +38,17 @@ class ProjectionRendererPolicyTest {
     }
 
     @Test
+    fun `rk3288 board defaults to SurfaceView when hardware is unknown`() {
+        assertEquals(
+            Settings.ViewMode.SURFACE,
+            ProjectionRendererPolicy.defaultViewMode(
+                hardware = "unknown",
+                board = "rk3288_box"
+            )
+        )
+    }
+
+    @Test
     fun `unknown devices keep TextureView default`() {
         assertEquals(
             Settings.ViewMode.TEXTURE,
