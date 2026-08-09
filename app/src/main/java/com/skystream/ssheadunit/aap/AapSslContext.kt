@@ -220,12 +220,18 @@ class AapSslContext(keyManager: SingleKeyKeyManager): AapSsl {
                 runDelegatedTasks(result, sslEngine)
                 
                 if (AppLog.LOG_VERBOSE || result.bytesProduced() == 0) {
-                    AppLog.d("SSL Decrypt Status: ${result.status}, Produced: ${result.bytesProduced()}, Consumed: ${result.bytesConsumed()}")
+                    AppLog.d("SSL Decrypt Status: ${result.status}, Produced: ${result.bytesProduced()}, Consumed: ${result.bytesConsumed()}, HandshakeStatus: ${result.handshakeStatus}, inputLen=$length, encryptedPreview=${AapDiagnostics.hexPreview(buffer, start, length)}")
+                }
+                if (result.status != SSLEngineResult.Status.OK) {
+                    AppLog.e("SSL Decrypt non-OK status: ${result.status}, Produced: ${result.bytesProduced()}, Consumed: ${result.bytesConsumed()}, HandshakeStatus: ${result.handshakeStatus}, inputLen=$length, encryptedPreview=${AapDiagnostics.hexPreview(buffer, start, length)}")
                 }
 
                 val resultBuffer = ByteArray(result.bytesProduced())
                 rxBuffer.flip()
                 rxBuffer.get(resultBuffer)
+                if (AppLog.LOG_VERBOSE && resultBuffer.isNotEmpty()) {
+                    AppLog.d("SSL Decrypt produced preview: ${AapDiagnostics.hexPreview(resultBuffer)}")
+                }
                 return ByteArrayWithLimit(resultBuffer, resultBuffer.size)
             } catch (e: Exception) {
                 // Check for Magic Garbage disconnect signal from Wireless Helper
