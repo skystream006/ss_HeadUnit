@@ -1,5 +1,11 @@
 # Continuous Integration
 
+## `build-debug-apk.yml` — Debug APK delivery
+
+Runs on pushes to `main` and manual dispatch, builds `:app:assembleGithubDebug`,
+and publishes the generated `.apk` directly as a prerelease asset on the
+`debug-apk-latest` tag.
+
 ## `android-ci.yml` — Android CI
 
 Runs on every pull request and on pushes to `main`. Two parallel jobs:

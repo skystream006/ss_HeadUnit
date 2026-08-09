@@ -1,0 +1,49 @@
+name: Bump Version On Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Bump versionName patch and versionCode
+        run: |
+          file="app/build.gradle.kts"
+
+          version_name=$(grep -m1 'versionName = "' "$file" | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
+          IFS='.' read -r major minor patch <<< "$version_name"
+          new_patch=$((10#$patch + 1))
+          new_version="$major.$minor.$new_patch"
+
+          version_code=$(grep -m1 'versionCode = ' "$file" | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+          new_version_code=$((version_code + 1))
+
+          sed -i -E "0,/versionName = \"[0-9]+\.[0-9]+\.[0-9]+\"/s//versionName = \"$new_version\"/" "$file"
+          sed -i -E "0,/versionCode = [0-9]+/s//versionCode = $new_version_code/" "$file"
+
+          echo "NEW_VERSION=$new_version" >> "$GITHUB_ENV"
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle.kts
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: bump version to $NEW_VERSION"
+          git push

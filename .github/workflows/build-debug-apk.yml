@@ -9,9 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Read-only; this workflow only checks out the repo and builds a debug APK.
+# This workflow builds a debug APK and publishes it as a release asset.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -41,9 +41,23 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :app:assembleGithubDebug --no-daemon --stacktrace
 
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+      - name: Locate debug APK
+        id: apk
+        run: |
+          apk_path=$(find app/build/outputs/apk/github/debug -maxdepth 1 -name "*.apk" | head -n 1)
+          if [ -z "$apk_path" ]; then
+            echo "No APK found" >&2
+            exit 1
+          fi
+          echo "path=$apk_path" >> "$GITHUB_OUTPUT"
+
+      - name: Publish debug APK release asset
+        uses: softprops/action-gh-release@v2
         with:
-          name: ssHeadUnit-github-debug
-          path: app/build/outputs/apk/github/debug/*.apk
-          if-no-files-found: error
+          tag_name: debug-apk-latest
+          name: Latest Debug APK
+          body: Automated latest github debug APK build.
+          prerelease: true
+          make_latest: false
+          files: ${{ steps.apk.outputs.path }}
+          overwrite_files: true
