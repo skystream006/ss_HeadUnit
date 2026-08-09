@@ -4,15 +4,14 @@ import android.os.Build
 import java.util.Locale
 
 object ProjectionRendererPolicy {
-    private val currentDeviceDefault by lazy {
+    private val legacyRockchipHardwareIds = setOf("rk3066", "rk3188", "rk3288", "rk3368")
+    private val legacyRockchipBoardIds = setOf("rk30sdk")
+
+    fun defaultViewModeForCurrentDevice(): Settings.ViewMode =
         defaultViewMode(
             hardware = Build.HARDWARE,
             board = Build.BOARD
         )
-    }
-
-    fun defaultViewModeForCurrentDevice(): Settings.ViewMode =
-        currentDeviceDefault
 
     fun defaultViewMode(
         hardware: String?,
@@ -26,9 +25,13 @@ object ProjectionRendererPolicy {
     }
 
     private fun isLegacyRockchip(hardware: String?, board: String?): Boolean {
-        val legacyRockchipIds = listOf("rk3066", "rk3188", "rk3288", "rk3368", "rk30sdk")
-        return listOf(hardware, board)
-            .map { it.orEmpty().lowercase(Locale.ROOT) }
-            .any { field -> legacyRockchipIds.any { id -> field == id || field.startsWith("${id}_") || field.startsWith("${id}-") } }
+        return matchesAny(hardware, legacyRockchipHardwareIds) ||
+            matchesAny(board, legacyRockchipHardwareIds) ||
+            matchesAny(board, legacyRockchipBoardIds)
+    }
+
+    private fun matchesAny(value: String?, ids: Set<String>): Boolean {
+        val field = value.orEmpty().lowercase(Locale.ROOT)
+        return ids.any { id -> field == id || field.startsWith("${id}_") || field.startsWith("${id}-") }
     }
 }
