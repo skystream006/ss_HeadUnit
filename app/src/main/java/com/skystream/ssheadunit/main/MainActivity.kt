@@ -39,8 +39,8 @@ import com.skystream.ssheadunit.utils.SystemUI
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -160,7 +160,7 @@ class MainActivity : BaseActivity() {
             Settings.setUsbAttachedActivityEnabled(applicationContext, appSettings.listenForUsbDevices)
         }
 
-        // Start main service immediately to handle connections and wireless server
+        // Start main service immediately to handle connections
         val serviceIntent = Intent(this, AapService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
 
@@ -204,7 +204,6 @@ class MainActivity : BaseActivity() {
         // installs; for users who already finished onboarding we request them from checkSetupFlow().
         viewModel.register()
         handleLaunchIntent(intent)
-        setupWifiDirectInfo()
 
         ContextCompat.registerReceiver(
             this, finishReceiver,
@@ -684,23 +683,6 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private fun setupWifiDirectInfo() {
-        val tvInfo = findViewById<android.widget.TextView>(R.id.wifi_direct_info)
-        val settings = Settings(this)
-
-        lifecycleScope.launch {
-            AapService.wifiDirectName.collectLatest { name ->
-                val isHelperMode = settings.wifiConnectionMode == 2
-                if (isHelperMode && name != null) {
-                    tvInfo.text = "WiFi Direct: $name"
-                    tvInfo.visibility = View.VISIBLE
-                } else {
-                    tvInfo.visibility = View.GONE
-                }
-            }
-        }
-    }
-
     override fun onStart() {
         super.onStart()
     }
@@ -783,32 +765,13 @@ class MainActivity : BaseActivity() {
             return
         }
 
-        if (intentAction == AapService.ACTION_START_SELF_MODE || 
-           (intentData?.scheme == "headunit" && intentData.host == "selfmode")) {
-            AppLog.i("MainActivity: Forced self-mode start requested")
-            HomeFragment.forceSelfModeLaunch = true
-            val selfModeIntent = Intent(this, AapService::class.java).apply {
-                this.action = AapService.ACTION_START_SELF_MODE
-            }
-            ContextCompat.startForegroundService(this, selfModeIntent)
-        }
-
         if (intent.action == Intent.ACTION_VIEW) {
             if (intentData?.scheme == "headunit" && intentData.host == "connect") {
-                val ip = intentData.getQueryParameter("ip")
-                if (!ip.isNullOrEmpty()) {
-                    AppLog.i("Received connect intent for IP: $ip")
-                    ContextCompat.startForegroundService(this, Intent(this, AapService::class.java).apply {
-                        action = AapService.ACTION_CONNECT_SOCKET
-                    })
-                    lifecycleScope.launch(Dispatchers.IO) { App.provide(this@MainActivity).commManager.connect(ip, 5277) }
-                } else {
-                    AppLog.i("Received connect intent without IP -> triggering last session auto-connect")
-                    val autoIntent = Intent(this, AapService::class.java).apply {
-                        action = AapService.ACTION_CHECK_USB
-                    }
-                    ContextCompat.startForegroundService(this, autoIntent)
+                AppLog.i("Received connect intent -> triggering USB connect flow")
+                val autoIntent = Intent(this, AapService::class.java).apply {
+                    action = AapService.ACTION_CHECK_USB
                 }
+                ContextCompat.startForegroundService(this, autoIntent)
             } else if (intentData?.scheme == "headunit" && intentData.host == "disconnect") {
                 AppLog.i("Received disconnect intent")
                 val stopIntent = Intent(this, AapService::class.java).apply {
@@ -934,7 +897,7 @@ class MainActivity : BaseActivity() {
 
         /** Launch sources that mean the app opened itself, with nobody necessarily watching. */
         private val AUTOMATIC_LAUNCH_SOURCES = setOf(
-            "Boot auto-start", "USB auto-start", "WiFi auto-start", "Bluetooth auto-start"
+            "Boot auto-start", "USB auto-start", "Bluetooth auto-start"
         )
 
         /**

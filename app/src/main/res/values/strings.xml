@@ -4,8 +4,6 @@
     <string name="settings">Settings</string>
 
     <!-- Settings tabs and search (redesign) -->
-    <string name="settings_tab_basic">Basic</string>
-    <string name="settings_tab_advanced">Advanced</string>
     <string name="settings_search_hint">Search settings</string>
 
     <!-- Connection mode selector -->

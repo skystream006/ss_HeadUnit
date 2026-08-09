@@ -7,12 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.skystream.ssheadunit.App
-import com.skystream.ssheadunit.aap.AapProjectionActivity
 import com.skystream.ssheadunit.aap.AapService
 import com.skystream.ssheadunit.utils.AppLog
 import com.skystream.ssheadunit.utils.Settings
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 /**
  * A transparent activity that handles App Shortcuts and Deep Links.
@@ -43,18 +40,10 @@ class AutomationActivity : AppCompatActivity() {
     private fun handleUri(data: android.net.Uri) {
         when (data.host) {
             "connect" -> {
-                val ip = data.getQueryParameter("ip")
-                if (!ip.isNullOrEmpty()) {
-                    ContextCompat.startForegroundService(this, Intent(this, AapService::class.java).apply {
-                        action = AapService.ACTION_CONNECT_SOCKET
-                    })
-                    lifecycleScope.launch(Dispatchers.IO) { App.provide(this@AutomationActivity).commManager.connect(ip, 5277) }
-                } else {
-                    val autoIntent = Intent(this, AapService::class.java).apply {
-                        this.action = AapService.ACTION_CHECK_USB
-                    }
-                    ContextCompat.startForegroundService(this, autoIntent)
+                val autoIntent = Intent(this, AapService::class.java).apply {
+                    this.action = AapService.ACTION_CHECK_USB
                 }
+                ContextCompat.startForegroundService(this, autoIntent)
             }
             "disconnect" -> {
                 val stopIntent = Intent(this, AapService::class.java).apply {
@@ -91,33 +80,6 @@ class AutomationActivity : AppCompatActivity() {
                     this.action = AapService.ACTION_DISCONNECT
                 }
                 ContextCompat.startForegroundService(this, stopIntent)
-            }
-            "com.skystream.ssheadunit.ACTION_START_SELF_MODE" -> {
-                val selfIntent = Intent(this, AapService::class.java).apply {
-                    this.action = AapService.ACTION_START_SELF_MODE
-                }
-                ContextCompat.startForegroundService(this, selfIntent)
-
-                // [FIX] Launch AapProjectionActivity NOW, while AutomationActivity is
-                // still in the foreground. This is critical on Android 10+ where
-                // background activity launches are silently blocked: by the time
-                // AapService finishes the Self Mode handshake and calls
-                // launchAapProjectionActivity(), the app has no foreground window and
-                // the launch often fails, leaving the user at the launcher.
-                //
-                // Starting AapProjectionActivity from this foreground context is always
-                // allowed. Its loading overlay will display while Self Mode negotiates;
-                // once the handshake completes AapService will reorder it to front
-                // (it's already there) and start streaming.
-                try {
-                    startActivity(
-                        AapProjectionActivity.intent(this).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                        }
-                    )
-                } catch (e: Exception) {
-                    AppLog.w("AutomationActivity: Could not pre-launch AapProjectionActivity: ${e.message}")
-                }
             }
             "com.skystream.ssheadunit.ACTION_STOP_SERVICE",
             "com.skystream.ssheadunit.ACTION_EXIT" -> {

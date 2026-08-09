@@ -416,36 +416,36 @@ class Settings(private val context: Context) {
         set(value) { prefs.edit().putInt("primary-connection", value.value).apply() }
 
     /**
-     * The connection types the user actually uses (multi-select). Drives which settings are shown.
-     * Empty = nothing chosen yet, so everything is shown. Migrated once from the legacy
-     * single-choice [primaryConnection].
+     * Wireless and Self Mode were removed; persist USB as the only supported mode so legacy
+     * installs carrying older selections migrate cleanly.
      */
     var connectionModes: Set<ConnectionMode>
         get() {
             val stored = prefs.getStringSet("connection-modes", null)
-            if (stored != null) return stored.mapNotNull { ConnectionMode.fromKey(it) }.toSet()
-            val migrated = migrateLegacyConnectionModes()
-            connectionModes = migrated
-            return migrated
+            val usbOnly = when {
+                stored != null && stored.contains(ConnectionMode.USB.key) -> setOf(ConnectionMode.USB)
+                stored != null -> setOf(ConnectionMode.USB)
+                else -> migrateLegacyConnectionModes()
+            }
+            if (stored == null || stored != setOf(ConnectionMode.USB.key)) {
+                connectionModes = usbOnly
+            }
+            return usbOnly
         }
         set(value) {
-            prefs.edit().putStringSet("connection-modes", value.map { it.key }.toSet()).apply()
+            val normalized = if (ConnectionMode.USB in value || value.isEmpty()) {
+                setOf(ConnectionMode.USB.key)
+            } else {
+                emptySet()
+            }
+            prefs.edit().putStringSet("connection-modes", normalized).apply()
         }
 
-    private fun migrateLegacyConnectionModes(): Set<ConnectionMode> = when (primaryConnection) {
-        ConnectionKind.USB_CABLE, ConnectionKind.USB_WIRELESS_ADAPTER -> setOf(ConnectionMode.USB)
-        ConnectionKind.WIFI, ConnectionKind.NATIVE_AA -> setOf(ConnectionMode.WIFI)
-        ConnectionKind.SELF_MODE -> setOf(ConnectionMode.SELF)
-        ConnectionKind.ALL -> setOf(ConnectionMode.USB, ConnectionMode.WIFI)
-        ConnectionKind.UNSET -> emptySet()
-    }
+    private fun migrateLegacyConnectionModes(): Set<ConnectionMode> = setOf(ConnectionMode.USB)
 
-    /** Whether USB-related settings should be shown (empty selection shows everything). */
-    fun showsUsb(): Boolean = connectionModes.isEmpty() || ConnectionMode.USB in connectionModes
-    /** Whether WiFi/wireless settings should be shown (empty selection shows everything). */
-    fun showsWifi(): Boolean = connectionModes.isEmpty() || ConnectionMode.WIFI in connectionModes
-    /** The external-GPS choice only applies when a phone is connected; false only for Self-only. */
-    fun showsExternalGps(): Boolean = showsUsb() || showsWifi()
+    fun showsUsb(): Boolean = true
+    fun showsWifi(): Boolean = false
+    fun showsExternalGps(): Boolean = true
 
     var autoConnectLastSession: Boolean
         get() = prefs.getBoolean("auto-connect-last-session", false)
@@ -527,10 +527,6 @@ class Settings(private val context: Context) {
     var useNativeSsl: Boolean
         get() = prefs.getBoolean("use-native-ssl", false)
         set(value) { prefs.edit().putBoolean("use-native-ssl", value).apply() }
-
-    var autoStartSelfMode: Boolean
-        get() = prefs.getBoolean("auto-start-self-mode", false)
-        set(value) { prefs.edit().putBoolean("auto-start-self-mode", value).apply() }
 
     var autoStartOnUsb: Boolean
         get() = prefs.getBoolean("auto-start-on-usb", false)
@@ -730,7 +726,7 @@ class Settings(private val context: Context) {
 
     /** A connection type the user can pick in the multi-select (USB, WiFi or Self Mode). */
     enum class ConnectionMode(val key: String) {
-        USB("usb"), WIFI("wifi"), SELF("self");
+        USB("usb");
 
         companion object {
             fun fromKey(k: String) = values().firstOrNull { it.key == k }
@@ -865,12 +861,10 @@ class Settings(private val context: Context) {
         const val KEY_NAVIGATION_VOLUME_OFFSET = "navigation-volume-offset"
 
         const val AUTO_CONNECT_LAST_SESSION = "last-session"
-        const val AUTO_CONNECT_SELF_MODE = "self-mode"
         const val AUTO_CONNECT_SINGLE_USB = "single-usb"
 
         val DEFAULT_AUTO_CONNECT_ORDER = listOf(
             AUTO_CONNECT_LAST_SESSION,
-            AUTO_CONNECT_SELF_MODE,
             AUTO_CONNECT_SINGLE_USB
         )
 
