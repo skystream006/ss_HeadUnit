@@ -45,6 +45,13 @@ class Settings(private val context: Context) {
         get() = prefs.getString("bt-address", "")!!
         set(value) = prefs.edit().putString("bt-address", value).apply()
 
+    // Manual override for the Bluetooth manager system service, for dual-radio head units whose
+    // second radio isn't found automatically. Empty (or "bluetooth_manager") means the default
+    // Android adapter is used.
+    var bluetoothManagerServiceName: String
+        get() = prefs.getString(KEY_BLUETOOTH_MANAGER_SERVICE, "")!!
+        set(value) = prefs.edit().putString(KEY_BLUETOOTH_MANAGER_SERVICE, value.trim()).apply()
+
     var lastKnownLocation: Location
         get() {
             val latitudeBits = prefs.getLong("last-loc-latitude", (32.0864169).toRawBits())
@@ -826,6 +833,33 @@ class Settings(private val context: Context) {
 
         private const val DEVICE_PREFS_NAME = "settings_device_protected"
         private const val KEY_AUTO_START_ON_BOOT = "auto-start-on-boot"
+
+        private const val KEY_BLUETOOTH_MANAGER_SERVICE = "bluetooth-manager-service"
+
+        // Boot-loop guard state. Kept in device-protected storage so it survives a locked boot,
+        // which is exactly when the guard has to count consecutive restarts.
+        private const val KEY_BOOT_LOOP_COUNT = "boot-loop-count"
+        private const val KEY_BOOT_LOOP_TIMESTAMP = "boot-loop-timestamp"
+
+        /**
+         * Clears the boot-loop guard state, re-arming wireless auto-start on the next boot.
+         */
+        fun clearBootLoopState(context: Context) {
+            bootLoopPrefs(context)
+                .edit()
+                .remove(KEY_BOOT_LOOP_COUNT)
+                .remove(KEY_BOOT_LOOP_TIMESTAMP)
+                .apply()
+        }
+
+        private fun bootLoopPrefs(context: Context): SharedPreferences {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.createDeviceProtectedStorageContext()
+                    .getSharedPreferences(DEVICE_PREFS_NAME, Context.MODE_PRIVATE)
+            } else {
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            }
+        }
 
         /**
          * Reads auto-start-on-boot from device-protected storage (API 24+),
