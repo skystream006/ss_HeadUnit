@@ -1286,20 +1286,16 @@ class SettingsFragment : Fragment() {
         items.add(SettingItem.SettingEntry(
             stableId = "viewMode",
             nameResId = R.string.view_mode,
-            searchKeywords = kw(R.string.surface_view, R.string.texture_view, R.string.gles_view),
-            value = when (pendingViewMode) {
-                Settings.ViewMode.SURFACE -> getString(R.string.surface_view)
-                Settings.ViewMode.TEXTURE -> getString(R.string.texture_view)
-                Settings.ViewMode.GLES -> getString(R.string.gles_view)
-                else -> getString(R.string.surface_view)
-            },
+            searchKeywords = viewModeLabels().joinToString(" "),
+            value = pendingViewMode?.let { viewModeLabel(it) } ?: getString(R.string.surface_view),
             onClick = { _ ->
-                val viewModes = arrayOf(getString(R.string.surface_view), getString(R.string.texture_view), getString(R.string.gles_view))
-                val currentIdx = pendingViewMode!!.value
+                val values = Settings.ViewMode.values()
+                val viewModes = values.map { viewModeLabel(it) }.toTypedArray()
+                val currentIdx = values.indexOf(pendingViewMode).coerceAtLeast(0)
                 MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
                     .setTitle(R.string.change_view_mode)
                     .setSingleChoiceItems(viewModes, currentIdx) { dialog, which ->
-                        pendingViewMode = Settings.ViewMode.fromInt(which)!!
+                        pendingViewMode = values[which]
                         checkChanges()
                         dialog.dismiss()
                         updateSettingsList()
@@ -1377,7 +1373,7 @@ class SettingsFragment : Fragment() {
             }
         ))
 
-        if (pendingViewMode == Settings.ViewMode.SURFACE) {
+        if (pendingViewMode?.isSurfaceViewBacked() == true) {
             items.add(SettingItem.ToggleSettingEntry(
                 stableId = "forcedScale",
                 nameResId = R.string.forced_scale,
@@ -1946,6 +1942,25 @@ class SettingsFragment : Fragment() {
 
         fullSettingsList = items
         renderSettings(scrollState)
+    }
+
+    private fun viewModeLabels(): Array<String> =
+        Settings.ViewMode.values().map { viewModeLabel(it) }.toTypedArray()
+
+    private fun viewModeLabel(mode: Settings.ViewMode): String = when (mode) {
+        Settings.ViewMode.SURFACE -> getString(R.string.surface_view)
+        Settings.ViewMode.TEXTURE -> getString(R.string.texture_view)
+        Settings.ViewMode.GLES -> getString(R.string.gles_view)
+        Settings.ViewMode.SURFACE_OPAQUE -> "SurfaceView Opaque"
+        Settings.ViewMode.SURFACE_RGBA -> "SurfaceView RGBA"
+        Settings.ViewMode.SURFACE_RGBX -> "SurfaceView RGBX"
+        Settings.ViewMode.SURFACE_MEDIA_OVERLAY -> "SurfaceView MediaOverlay"
+        Settings.ViewMode.SURFACE_ON_TOP -> "SurfaceView OnTop"
+        Settings.ViewMode.GLES30 -> "GLES30"
+        Settings.ViewMode.NATIVE_SURFACE -> "Native Surface"
+        Settings.ViewMode.IMAGE_READER_YUV -> "ImageReader/YUV Blit"
+        Settings.ViewMode.CANVAS_YUV -> "Canvas/Bitmap YUV"
+        Settings.ViewMode.SURFACE_CONTROL -> "SurfaceControl"
     }
 
     private fun setupTabsAndSearch(view: View) {

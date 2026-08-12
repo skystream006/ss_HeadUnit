@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.PixelFormat
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -40,9 +41,11 @@ import com.skystream.ssheadunit.utils.AppLog
 import com.skystream.ssheadunit.utils.IntentFilters
 import com.skystream.ssheadunit.utils.LogExporter
 import com.skystream.ssheadunit.utils.LogFilesHelper
+import com.skystream.ssheadunit.view.CanvasYuvProjectionView
 import com.skystream.ssheadunit.view.IProjectionView
 import com.skystream.ssheadunit.view.GlProjectionView
 import com.skystream.ssheadunit.view.ProjectionView
+import com.skystream.ssheadunit.view.ProjectionViewOptions
 import com.skystream.ssheadunit.view.TextureProjectionView
 import com.skystream.ssheadunit.utils.Settings
 import com.skystream.ssheadunit.utils.ToastUtils
@@ -364,7 +367,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // After a plain rebuild fails to stick, escalate away from a non-SurfaceView backend
         // (unless the bundled software HEVC decoder is active, which needs the GLES YUV sink).
         val shouldFallBack = displayStallRecoveries >= 2 &&
-            effectiveMode != Settings.ViewMode.SURFACE &&
+            !effectiveMode.isSurfaceViewBacked() &&
             !videoDecoder.usingBundledSoftwareHevc
         if (shouldFallBack) {
             AppLog.w("Display stall ($reason) again on $effectiveMode. Falling back to SurfaceView for this session. See issue #650.")
@@ -450,10 +453,10 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         }
     }
 
-    /** Rotate the rendering backend live (TextureView -> SurfaceView -> GLES) and rebuild, so the
+    /** Rotate the rendering backend live and rebuild, so the
      * user can find one that draws. Clears any stall-recovery override so the manual choice wins. */
     private fun cycleRenderer() {
-        val order = listOf(Settings.ViewMode.TEXTURE, Settings.ViewMode.SURFACE, Settings.ViewMode.GLES)
+        val order = rendererCycleOrder()
         val current = forcedViewModeOverride ?: settings.viewMode
         val next = order[(order.indexOf(current).coerceAtLeast(0) + 1) % order.size]
         forcedViewModeOverride = null
@@ -462,11 +465,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // Reset stall recovery so the #650 watchdog does not immediately re-escalate the new backend.
         displayStallRecoveries = 0
         lastDisplayStallRecoveryMs = 0L
-        val label = when (next) {
-            Settings.ViewMode.SURFACE -> "SurfaceView"
-            Settings.ViewMode.TEXTURE -> "TextureView"
-            Settings.ViewMode.GLES -> "GLES20"
-        }
+        val label = viewModeLabel(next)
         ToastUtils.showToast(this, getString(R.string.renderer_switched_to, label), Toast.LENGTH_SHORT)
         // Drop the current bar and rebuild on the new backend, then re-offer so the user can keep
         // cycling if this one is also blank (the new backend may decode frames yet still show black,
@@ -1702,32 +1701,12 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
                 "model=${Build.MODEL} API=${Build.VERSION.SDK_INT}"
         )
 
-        if (mode == Settings.ViewMode.TEXTURE) {
-            AppLog.i("Using TextureView")
-            val textureView = TextureProjectionView(this)
-            textureView.layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            projectionView = textureView
-            container.setBackgroundColor(Color.BLACK)
-        } else if (mode == Settings.ViewMode.GLES) {
-            AppLog.i("Using GlProjectionView")
-            val glView = GlProjectionView(this)
-            glView.layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            projectionView = glView
-            container.setBackgroundColor(Color.BLACK)
-        } else {
-            AppLog.i("Using SurfaceView")
-            projectionView = ProjectionView(this)
-            (projectionView as View).layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        }
+        projectionView = createProjectionView(mode)
+        (projectionView as View).layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        container.setBackgroundColor(Color.BLACK)
         // Use the same screen conf for both views for negotiation
         HeadUnitScreenConfig.init(this, displayMetrics, settings)
 
@@ -1735,12 +1714,109 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         container.addView(view)
         videoDecoder.softwareYuvFrameSink = projectionView as? SoftwareYuvFrameSink
         if (videoDecoder.softwareYuvFrameSink != null) {
-            AppLog.i("Using GLES YUV sink for bundled software HEVC")
+            AppLog.i("Using software YUV sink for bundled software HEVC")
         }
 
         projectionView.addCallback(this)
         // Baseline for the "no frame drawn while streaming" renderer check (issue #767).
         projectionStartMs = SystemClock.elapsedRealtime()
+    }
+
+    private fun createProjectionView(mode: Settings.ViewMode): IProjectionView {
+        AppLog.i("Using ${viewModeLabel(mode)}")
+        return when (mode) {
+            Settings.ViewMode.TEXTURE -> TextureProjectionView(this)
+            Settings.ViewMode.GLES -> GlProjectionView(this)
+            Settings.ViewMode.GLES30 -> GlProjectionView(this, glesVersion = 3)
+            Settings.ViewMode.SURFACE_OPAQUE -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "SurfaceView Opaque",
+                    pixelFormat = PixelFormat.OPAQUE
+                )
+            )
+            Settings.ViewMode.SURFACE_RGBA -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "SurfaceView RGBA",
+                    pixelFormat = PixelFormat.RGBA_8888
+                )
+            )
+            Settings.ViewMode.SURFACE_RGBX -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "SurfaceView RGBX",
+                    pixelFormat = PixelFormat.RGBX_8888
+                )
+            )
+            Settings.ViewMode.SURFACE_MEDIA_OVERLAY -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "SurfaceView MediaOverlay",
+                    zOrderMediaOverlay = true
+                )
+            )
+            Settings.ViewMode.SURFACE_ON_TOP -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "SurfaceView OnTop",
+                    zOrderOnTop = true
+                )
+            )
+            Settings.ViewMode.NATIVE_SURFACE -> ProjectionView(
+                this,
+                options = ProjectionViewOptions(
+                    name = "Native Surface / ANativeWindow-compatible",
+                    pixelFormat = PixelFormat.OPAQUE
+                )
+            )
+            Settings.ViewMode.IMAGE_READER_YUV -> CanvasYuvProjectionView(this, "ImageReader/YUV Blit")
+            Settings.ViewMode.CANVAS_YUV -> CanvasYuvProjectionView(this, "Canvas/Bitmap YUV")
+            Settings.ViewMode.SURFACE_CONTROL -> {
+                val options = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ProjectionViewOptions(
+                        name = "SurfaceControl-style SurfaceView",
+                        zOrderMediaOverlay = true
+                    )
+                } else {
+                    ProjectionViewOptions(name = "SurfaceControl fallback SurfaceView")
+                }
+                ProjectionView(this, options = options)
+            }
+            Settings.ViewMode.SURFACE -> ProjectionView(this)
+        }
+    }
+
+    private fun rendererCycleOrder(): List<Settings.ViewMode> = listOf(
+        Settings.ViewMode.TEXTURE,
+        Settings.ViewMode.SURFACE,
+        Settings.ViewMode.SURFACE_OPAQUE,
+        Settings.ViewMode.SURFACE_RGBX,
+        Settings.ViewMode.SURFACE_RGBA,
+        Settings.ViewMode.SURFACE_MEDIA_OVERLAY,
+        Settings.ViewMode.SURFACE_ON_TOP,
+        Settings.ViewMode.NATIVE_SURFACE,
+        Settings.ViewMode.GLES,
+        Settings.ViewMode.GLES30,
+        Settings.ViewMode.IMAGE_READER_YUV,
+        Settings.ViewMode.CANVAS_YUV,
+        Settings.ViewMode.SURFACE_CONTROL
+    )
+
+    private fun viewModeLabel(mode: Settings.ViewMode): String = when (mode) {
+        Settings.ViewMode.SURFACE -> "SurfaceView"
+        Settings.ViewMode.TEXTURE -> "TextureView"
+        Settings.ViewMode.GLES -> "GLES20"
+        Settings.ViewMode.SURFACE_OPAQUE -> "SurfaceView Opaque"
+        Settings.ViewMode.SURFACE_RGBA -> "SurfaceView RGBA"
+        Settings.ViewMode.SURFACE_RGBX -> "SurfaceView RGBX"
+        Settings.ViewMode.SURFACE_MEDIA_OVERLAY -> "SurfaceView MediaOverlay"
+        Settings.ViewMode.SURFACE_ON_TOP -> "SurfaceView OnTop"
+        Settings.ViewMode.GLES30 -> "GLES30"
+        Settings.ViewMode.NATIVE_SURFACE -> "Native Surface"
+        Settings.ViewMode.IMAGE_READER_YUV -> "ImageReader/YUV Blit"
+        Settings.ViewMode.CANVAS_YUV -> "Canvas/Bitmap YUV"
+        Settings.ViewMode.SURFACE_CONTROL -> "SurfaceControl"
     }
 
     private fun setupFpsCounter() {

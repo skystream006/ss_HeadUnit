@@ -1174,7 +1174,26 @@ class Settings(private val context: Context) {
     enum class ViewMode(val value: Int) {
         SURFACE(0),
         TEXTURE(1),
-        GLES(2);
+        GLES(2),
+        SURFACE_OPAQUE(3),
+        SURFACE_RGBA(4),
+        SURFACE_RGBX(5),
+        SURFACE_MEDIA_OVERLAY(6),
+        SURFACE_ON_TOP(7),
+        GLES30(8),
+        NATIVE_SURFACE(9),
+        IMAGE_READER_YUV(10),
+        CANVAS_YUV(11),
+        SURFACE_CONTROL(12);
+
+        fun isSurfaceViewBacked(): Boolean = this == SURFACE ||
+            this == SURFACE_OPAQUE ||
+            this == SURFACE_RGBA ||
+            this == SURFACE_RGBX ||
+            this == SURFACE_MEDIA_OVERLAY ||
+            this == SURFACE_ON_TOP ||
+            this == NATIVE_SURFACE ||
+            this == SURFACE_CONTROL
 
         companion object {
             private val map = values().associateBy(ViewMode::value)

@@ -1,6 +1,7 @@
 package com.skystream.ssheadunit.view
 
 import android.content.Context
+import android.graphics.PixelFormat
 import android.util.AttributeSet
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -10,8 +11,18 @@ import com.skystream.ssheadunit.decoder.VideoDecoder
 import com.skystream.ssheadunit.utils.AppLog
 import com.skystream.ssheadunit.utils.HeadUnitScreenConfig
 
+data class ProjectionViewOptions(
+    val name: String = "SurfaceView",
+    val pixelFormat: Int? = null,
+    val zOrderMediaOverlay: Boolean = false,
+    val zOrderOnTop: Boolean = false
+)
+
 class ProjectionView @JvmOverloads constructor(
-    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    private val options: ProjectionViewOptions = ProjectionViewOptions()
 ) : SurfaceView(context, attrs, defStyleAttr), IProjectionView, SurfaceHolder.Callback {
 
     private val callbacks = mutableListOf<IProjectionView.Callbacks>()
@@ -21,7 +32,14 @@ class ProjectionView @JvmOverloads constructor(
 
     init {
         videoDecoder = App.provide(context).videoDecoder
+        options.pixelFormat?.let { holder.setFormat(it) }
+        if (options.zOrderOnTop) {
+            setZOrderOnTop(true)
+        } else if (options.zOrderMediaOverlay) {
+            setZOrderMediaOverlay(true)
+        }
         holder.addCallback(this)
+        AppLog.i("${options.name}: initialized format=${options.pixelFormat ?: PixelFormat.UNKNOWN} mediaOverlay=${options.zOrderMediaOverlay} onTop=${options.zOrderOnTop}")
     }
 
     override fun onDetachedFromWindow() {
