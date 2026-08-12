@@ -49,7 +49,7 @@ object HeadUnitScreenConfig {
 
     fun init(context: Context, displayMetrics: DisplayMetrics, settings: Settings) {
         stretchToFill = settings.stretchToFill
-        forcedScale = settings.forcedScale && settings.viewMode == Settings.ViewMode.SURFACE
+        forcedScale = settings.forcedScale && settings.viewMode.isSurfaceViewBacked()
 
         val realW: Int
         val realH: Int

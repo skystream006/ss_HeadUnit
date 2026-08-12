@@ -151,7 +151,7 @@ class QuickSettingsFragment : DialogFragment() {
         items.add(SettingItem.SettingEntry(
             stableId = "viewMode",
             nameResId = R.string.view_mode,
-            value = settings.viewMode.name,
+            value = viewModeLabel(settings.viewMode),
             onClick = { showViewModeDialog() }
         ))
 
@@ -361,8 +361,8 @@ class QuickSettingsFragment : DialogFragment() {
     }
 
     private fun showViewModeDialog() {
-        val viewModes = arrayOf("SurfaceView", "TextureView", "GLES20")
-        val values = arrayOf(Settings.ViewMode.SURFACE, Settings.ViewMode.TEXTURE, Settings.ViewMode.GLES)
+        val values = Settings.ViewMode.values()
+        val viewModes = values.map { viewModeLabel(it) }.toTypedArray()
         val currentIdx = values.indexOf(settings.viewMode).coerceAtLeast(0)
         MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
             .setTitle(R.string.view_mode)
@@ -374,6 +374,22 @@ class QuickSettingsFragment : DialogFragment() {
                 updateSettingsList()
             }
             .show()
+    }
+
+    private fun viewModeLabel(mode: Settings.ViewMode): String = when (mode) {
+        Settings.ViewMode.SURFACE -> "SurfaceView"
+        Settings.ViewMode.TEXTURE -> "TextureView"
+        Settings.ViewMode.GLES -> "GLES20"
+        Settings.ViewMode.SURFACE_OPAQUE -> "SurfaceView Opaque"
+        Settings.ViewMode.SURFACE_RGBA -> "SurfaceView RGBA"
+        Settings.ViewMode.SURFACE_RGBX -> "SurfaceView RGBX"
+        Settings.ViewMode.SURFACE_MEDIA_OVERLAY -> "SurfaceView MediaOverlay"
+        Settings.ViewMode.SURFACE_ON_TOP -> "SurfaceView OnTop"
+        Settings.ViewMode.GLES30 -> "GLES30"
+        Settings.ViewMode.NATIVE_SURFACE -> "Native Surface"
+        Settings.ViewMode.IMAGE_READER_YUV -> "ImageReader/YUV Blit"
+        Settings.ViewMode.CANVAS_YUV -> "Canvas/Bitmap YUV"
+        Settings.ViewMode.SURFACE_CONTROL -> "SurfaceControl"
     }
 
     private fun triggerLogExport() {

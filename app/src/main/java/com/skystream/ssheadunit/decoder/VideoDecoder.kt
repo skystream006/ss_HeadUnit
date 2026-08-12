@@ -575,11 +575,7 @@ class VideoDecoder(private val settings: Settings) {
         try {
             val surface = mSurface ?: return
             AppLog.i("Configuring bundled FFmpeg HEVC decoder for ${width}x$height")
-            val yuvFrameSink = if (settings.viewMode == Settings.ViewMode.GLES) {
-                softwareYuvFrameSink
-            } else {
-                null
-            }
+            val yuvFrameSink = softwareYuvFrameSink
             val decoder = FfmpegHevcDecoder(
                 surface = if (yuvFrameSink == null) surface else null,
                 yuvFrameSink = yuvFrameSink,

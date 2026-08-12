@@ -21,18 +21,22 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class GlProjectionView(context: Context) : GLSurfaceView(context), IProjectionView, SoftwareYuvFrameSink {
+class GlProjectionView(
+    context: Context,
+    private val glesVersion: Int = 2
+) : GLSurfaceView(context), IProjectionView, SoftwareYuvFrameSink {
 
     private val renderer: VideoRenderer
     private val callbacks = mutableListOf<IProjectionView.Callbacks>()
 
     init {
-        setEGLContextClientVersion(2)
+        setEGLContextClientVersion(glesVersion)
         setEGLConfigChooser(8, 8, 8, 8, 16, 0)
         renderer = VideoRenderer()
         setRenderer(renderer)
         renderMode = RENDERMODE_WHEN_DIRTY
         preserveEGLContextOnPause = true // Keep context alive if possible
+        AppLog.i("GlProjectionView: using OpenGL ES $glesVersion context")
     }
 
     override fun addCallback(callback: IProjectionView.Callbacks) {
