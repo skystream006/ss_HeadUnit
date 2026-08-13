@@ -17,8 +17,11 @@ Runs after `Bump Version On Merge` completes successfully on `main`, and on
 manual dispatch. Builds `:app:assembleGithubDebug`,
 uploads the generated `.apk` as a downloadable workflow artifact, and publishes
 the same file directly as a prerelease asset on the `debug-apk-latest` tag.
-The published APK is renamed to `{AppName}-v{Version}-pr{PullRequestNumber}.apk`
-(using `pr0` when no PR is associated, e.g. manual runs).
+The published APK is renamed to `{AppName}-v{Version}-pr{PullRequestNumber}.apk`.
+The PR number is resolved from the merged commit (via the commits→pulls API,
+falling back to parsing `#123` out of the commit subject), because
+`workflow_run.pull_requests` is empty for push-triggered runs. `pr0` is used
+when no PR can be associated with the commit, e.g. direct pushes to `main`.
 
 ## `android-ci.yml` — Android CI
 
