@@ -18,6 +18,7 @@ concurrency:
 # This workflow builds a debug APK and publishes it as a release asset.
 permissions:
   contents: write
+  pull-requests: read
 
 jobs:
   build:
@@ -34,6 +35,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+          # Enough history for the PR lookup below to inspect the commits that
+          # precede the version-bump commit.
+          fetch-depth: 10
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -54,17 +58,46 @@ jobs:
       - name: Build debug APK
         run: ./gradlew :app:assembleGithubDebug --no-daemon --stacktrace
 
+      # `workflow_run.pull_requests` is only populated for runs triggered by
+      # `pull_request` events; the bump workflow runs on `push`, so that field
+      # is always empty here. Resolve the PR from the merged commit instead,
+      # falling back to the commit subject (`... (#123)` / `Merge pull request
+      # #123 ...`) when the API lookup returns nothing.
       - name: Resolve PR number
         id: pr
         env:
+          GH_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            pr_number=$(jq -r '.pull_request.number // 0' "$GITHUB_EVENT_PATH")
-          elif [ "$EVENT_NAME" = "workflow_run" ]; then
-            pr_number=$(jq -r '.workflow_run.pull_requests[0].number // 0' "$GITHUB_EVENT_PATH")
+          set -euo pipefail
+          pr_number=0
+          if [ "$EVENT_NAME" = "workflow_run" ] && [ -n "${HEAD_SHA:-}" ]; then
+            candidates="$HEAD_SHA"
           else
-            pr_number=0
+            # Manual runs: the tip of main is usually the version-bump commit,
+            # so also consider the commits it was created on top of.
+            candidates="$(git rev-list -n 5 HEAD)"
+          fi
+          for sha in $candidates; do
+            subject="$(git log -1 --format=%s "$sha" 2>/dev/null || true)"
+            case "$subject" in
+              "chore: bump version to "*) continue ;;
+            esac
+            number="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${sha}/pulls" \
+              --jq '[.[] | select(.number != null) | .number] | first // empty' 2>/dev/null || true)"
+            case "$number" in ''|*[!0-9]*) number="" ;; esac
+            if [ -z "$number" ]; then
+              number="$(printf '%s' "$subject" | sed -nE 's/.*#([0-9]+).*/\1/p' | head -n 1)"
+              case "$number" in ''|*[!0-9]*) number="" ;; esac
+            fi
+            if [ -n "$number" ]; then
+              pr_number="$number"
+              break
+            fi
+          done
+          if [ "$pr_number" = "0" ]; then
+            echo "Warning: no pull request associated with the built commit; using pr0." >&2
           fi
           echo "number=$pr_number" >> "$GITHUB_OUTPUT"
 
